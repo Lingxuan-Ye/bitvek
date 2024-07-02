@@ -7,7 +7,7 @@ mod index;
 mod iter;
 
 /// Say, we have a bit vector,
-/// it's nothing better than a `Vec<bool>`, but ...
+/// it's nothing better than a [`Vec<bool>`], but ...
 /// what if we implement it,
 /// and save some poor bits of memory?
 #[derive(Clone, Default)]
@@ -17,7 +17,7 @@ pub struct BitVec {
 }
 
 impl BitVec {
-    /// Creates a new empty `BitVec`.
+    /// Creates a new empty [`BitVec`].
     ///
     /// # Examples
     ///
@@ -30,7 +30,7 @@ impl BitVec {
         Default::default()
     }
 
-    /// Creates a new empty `BitVec` with the specified capacity.
+    /// Creates a new empty [`BitVec`] with the specified capacity.
     ///
     /// # Notes
     ///
