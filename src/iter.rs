@@ -124,3 +124,51 @@ impl DoubleEndedIterator for IntoIter {
 
 impl ExactSizeIterator for IntoIter {}
 impl FusedIterator for IntoIter {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_iter() {
+        let vec = BitVec {
+            data: vec![0b1010_0000],
+            unused: U3(4),
+        };
+        let mut iter = vec.iter();
+
+        assert_eq!(iter.next(), Some(true));
+        assert_eq!(iter.next(), Some(false));
+        assert_eq!(iter.next_back(), Some(false));
+        assert_eq!(iter.next_back(), Some(true));
+        assert_eq!(iter.next(), None);
+        assert_eq!(iter.next_back(), None);
+    }
+
+    #[test]
+    fn test_from_iter() {
+        let expected = BitVec {
+            data: vec![0b1010_0000],
+            unused: U3(4),
+        };
+
+        let vec = BitVec::from_iter([true, false, true, false]);
+        assert_eq!(vec, expected);
+    }
+
+    #[test]
+    fn test_into_iter() {
+        let vec = BitVec {
+            data: vec![0b1010_0000],
+            unused: U3(4),
+        };
+        let mut iter = vec.into_iter();
+
+        assert_eq!(iter.next(), Some(true));
+        assert_eq!(iter.next(), Some(false));
+        assert_eq!(iter.next_back(), Some(false));
+        assert_eq!(iter.next_back(), Some(true));
+        assert_eq!(iter.next(), None);
+        assert_eq!(iter.next_back(), None);
+    }
+}
