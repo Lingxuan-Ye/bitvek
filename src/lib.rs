@@ -1,16 +1,30 @@
-//! A simple bit vector implementation.
+//! Say, we have a bit vector —
+//!
+//! it's nothing better than a [`Vec<bool>`], but ...
+//!
+//! what if we implement it,
+//!
+//! and save some poor bits of memory?
+//!
+//! # Quick Start
+//!
+//! The following vector only takes **one** byte of the heap memory!
+//!
+//! ```
+//! use bitvek::bitvec;
+//!
+//! let vec = bitvec![true, true, true, true, false, false, false, false];
+//! ```
+
+pub mod iter;
 
 mod conversion;
 mod eq;
 mod fmt;
 mod index;
-mod iter;
 mod macros;
 
-/// Say, we have a bit vector,
-/// it's nothing better than a [`Vec<bool>`], but ...
-/// what if we implement it,
-/// and save some poor bits of memory?
+/// A simple bit vector implementation.
 #[derive(Clone, Default)]
 pub struct BitVec {
     data: Vec<u8>,
@@ -72,8 +86,17 @@ impl BitVec {
 }
 
 impl BitVec {
-    /// Returns the bit at the specified index,
-    /// if in bounds.
+    /// Returns the bit at the specified index, if in bounds.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bitvek::bitvec;
+    ///
+    /// let vec = bitvec![true, false, true, false];
+    /// assert_eq!(vec.get(3), Some(false));
+    /// assert_eq!(vec.get(4), None);
+    /// ```
     pub fn get(&self, index: usize) -> Option<bool> {
         if index >= self.len() {
             return None;
@@ -81,12 +104,21 @@ impl BitVec {
         unsafe { Some(self.get_unchecked(index)) }
     }
 
-    /// Returns the bit at the specified index,
-    /// without performing any bounds checking.
+    /// Returns the bit at the specified index, without performing any
+    /// bounds checking.
     ///
     /// # Safety
     ///
     /// Calling this method with an out-of-bounds index is *[undefined behavior]*.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bitvek::bitvec;
+    ///
+    /// let vec = bitvec![true, false, true, false];
+    /// unsafe { assert_eq!(vec.get_unchecked(3), false) };
+    /// ```
     ///
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
     pub unsafe fn get_unchecked(&self, index: usize) -> bool {
@@ -98,6 +130,20 @@ impl BitVec {
 
     /// Sets the bit at the specified index to the specified value,
     /// if in bounds.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bitvek::bitvec;
+    ///
+    /// let expected = bitvec![true, true, true, true];
+    ///
+    /// let mut vec = bitvec![true, false, true, false];
+    /// assert!(vec.set(1, true).is_some());
+    /// assert!(vec.set(3, true).is_some());
+    /// assert!(vec.set(4, true).is_none());
+    /// assert_eq!(vec, expected);
+    /// ```
     pub fn set(&mut self, index: usize, value: bool) -> Option<&mut Self> {
         if index >= self.len() {
             return None;
@@ -105,9 +151,27 @@ impl BitVec {
         unsafe { Some(self.set_unchecked(index, value)) }
     }
 
+    /// Sets the bit at the specified index to the specified value,
+    /// without performing any bounds checking.
+    ///
     /// # Safety
     ///
     /// Calling this method with an out-of-bounds index is *[undefined behavior]*.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bitvek::bitvec;
+    ///
+    /// let expected = bitvec![true, true, true, true];
+    ///
+    /// let mut vec = bitvec![true, false, true, false];
+    /// unsafe {
+    ///     vec.set_unchecked(1, true);
+    ///     vec.set_unchecked(3, true);
+    /// }
+    /// assert_eq!(vec, expected);
+    /// ```
     ///
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
     pub unsafe fn set_unchecked(&mut self, index: usize, value: bool) -> &mut Self {
@@ -122,7 +186,20 @@ impl BitVec {
         self
     }
 
-    /// Appends a bit to the end of the vector.
+    /// Appends a bit to the end of the vector, or returns `None` if the
+    /// length of the vector reaches `usize::MAX`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bitvek::bitvec;
+    ///
+    /// let expected = bitvec![true, false, true, false, true];
+    ///
+    /// let mut vec = bitvec![true, false, true, false];
+    /// assert!(vec.push(true).is_some());
+    /// assert_eq!(vec, expected);
+    /// ```
     pub fn push(&mut self, value: bool) -> Option<&mut Self> {
         if self.unused == U3(0) {
             if self.data.len() == usize::MAX / 8 {
@@ -135,8 +212,20 @@ impl BitVec {
         unsafe { Some(self.set_unchecked(index, value)) }
     }
 
-    /// Removes the last bit from the vector and returns it,
-    /// or `None` if the vector is empty.
+    /// Removes the last bit from the vector and returns it, or `None` if the
+    /// vector is empty.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bitvek::bitvec;
+    ///
+    /// let expected = bitvec![true, false, true];
+    ///
+    /// let mut vec = bitvec![true, false, true, false];
+    /// assert_eq!(vec.pop(), Some(false));
+    /// assert_eq!(vec, expected);
+    /// ```
     pub fn pop(&mut self) -> Option<bool> {
         if self.is_empty() {
             return None;

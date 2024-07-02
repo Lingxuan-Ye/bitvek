@@ -1,9 +1,28 @@
+//! This module defines several iterators for iterating over a [`BitVec`].
+//! You may not need to use them directly.
+
 use super::{BitVec, U3};
 use std::iter::FusedIterator;
 use std::ops::Range;
 
 impl BitVec {
     /// Returns an iterator over the bits of the vector.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bitvek::bitvec;
+    ///
+    /// let vec = bitvec![true, false, true, false];
+    /// let mut iter = vec.iter();
+    ///
+    /// assert_eq!(iter.next(), Some(true));
+    /// assert_eq!(iter.next(), Some(false));
+    /// assert_eq!(iter.next_back(), Some(false));
+    /// assert_eq!(iter.next_back(), Some(true));
+    /// assert_eq!(iter.next(), None);
+    /// assert_eq!(iter.next_back(), None);
+    /// ```
     pub fn iter(&self) -> Iter<'_> {
         Iter::new(self)
     }
