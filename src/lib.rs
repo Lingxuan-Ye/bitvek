@@ -5,6 +5,7 @@ mod eq;
 mod fmt;
 mod index;
 mod iter;
+mod macros;
 
 /// Say, we have a bit vector,
 /// it's nothing better than a [`Vec<bool>`], but ...
