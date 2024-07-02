@@ -2,6 +2,12 @@
 name = "bitvek"
 version = "0.1.0"
 edition = "2021"
+authors = ["Lingxuan Ye <love@lingxuan.io>"]
+categories = ["data-structures"]
+repository = "https://github.com/Lingxuan-Ye/bitvek"
+readme = "README.md"
+license = "MIT"
+description = "A simple bit vector implementation."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
