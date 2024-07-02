@@ -1,5 +1,6 @@
 //! A simple bit vector implementation.
 
+mod conversion;
 mod iter;
 
 /// Say, we have a bit vector,
