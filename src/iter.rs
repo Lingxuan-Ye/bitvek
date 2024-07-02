@@ -52,7 +52,7 @@ impl IntoIterator for BitVec {
 }
 
 /// An iterator over the bits of a vector.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Iter<'a> {
     vec: &'a BitVec,
     range: Range<usize>,
@@ -89,7 +89,7 @@ impl ExactSizeIterator for Iter<'_> {}
 impl FusedIterator for Iter<'_> {}
 
 /// An owning iterator over the bits of a vector.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct IntoIter {
     vec: BitVec,
     range: Range<usize>,
