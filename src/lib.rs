@@ -2,6 +2,7 @@
 
 mod conversion;
 mod fmt;
+mod index;
 mod iter;
 
 /// Say, we have a bit vector,
