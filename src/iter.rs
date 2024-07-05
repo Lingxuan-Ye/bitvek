@@ -1,6 +1,3 @@
-//! This module defines several iterators for iterating over a [`BitVec`].
-//! You may not need to use them directly.
-
 use super::{BitVec, U3};
 use std::iter::FusedIterator;
 use std::ops::Range;
@@ -28,21 +25,36 @@ impl BitVec {
     }
 }
 
-impl FromIterator<bool> for BitVec {
-    fn from_iter<I>(iter: I) -> Self
+impl Extend<bool> for BitVec {
+    fn extend<I>(&mut self, iter: I)
     where
         I: IntoIterator<Item = bool>,
     {
-        let mut data = Vec::new();
         let mut iter = iter.into_iter();
 
-        let (last_byte, unused) = 'a: loop {
+        for _ in 0..self.unused.value() {
+            match iter.next() {
+                None => return,
+                Some(true) => {
+                    self.push(true);
+                }
+                Some(false) => {
+                    self.push(false);
+                }
+            }
+        }
+
+        loop {
             let mut byte: u8 = 0;
             for index in 0..8 {
                 match iter.next() {
                     None => {
-                        let unused = U3((8 - index) % 8);
-                        break 'a (byte, unused);
+                        let unused = (8 - index) % 8;
+                        if unused != 0 {
+                            self.data.push(byte);
+                        }
+                        self.unused = U3(unused);
+                        return;
                     }
                     Some(true) => {
                         byte |= 1 << (7 - index);
@@ -50,14 +62,19 @@ impl FromIterator<bool> for BitVec {
                     Some(false) => (),
                 }
             }
-            data.push(byte);
-        };
-
-        if unused != U3(0) {
-            data.push(last_byte);
+            self.data.push(byte);
         }
+    }
+}
 
-        Self { data, unused }
+impl FromIterator<bool> for BitVec {
+    fn from_iter<I>(iter: I) -> Self
+    where
+        I: IntoIterator<Item = bool>,
+    {
+        let mut vec = BitVec::new();
+        vec.extend(iter);
+        vec
     }
 }
 
@@ -162,6 +179,37 @@ mod tests {
         assert_eq!(iter.next_back(), Some(true));
         assert_eq!(iter.next(), None);
         assert_eq!(iter.next_back(), None);
+    }
+
+    #[test]
+    fn test_extend() {
+        let expected = BitVec {
+            data: vec![0b1010_0000],
+            unused: U3(4),
+        };
+
+        let mut vec = BitVec {
+            data: vec![0b1000_0000],
+            unused: U3(6),
+        };
+        vec.extend([true, false]);
+        assert_eq!(vec, expected);
+
+        let expected = BitVec {
+            data: vec![0b1010_1010, 0b1010_1010, 0b1010_0000],
+            unused: U3(4),
+        };
+
+        let mut vec = BitVec {
+            data: vec![0b1010_0000],
+            unused: U3(4),
+        };
+        vec.extend([
+            true, false, true, false, // first byte
+            true, false, true, false, true, false, true, false, // second byte
+            true, false, true, false, // final byte
+        ]);
+        assert_eq!(vec, expected);
     }
 
     #[test]

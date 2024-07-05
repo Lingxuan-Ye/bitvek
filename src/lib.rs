@@ -15,13 +15,23 @@
 //!
 //! let vec = bitvec![true, true, true, true, false, false, false, false];
 //! ```
+//!
+//! Find it cumbersome? Try this:
+//!
+//! ```
+//! # use bitvek::bitvec;
+//! #
+//! // requires the total number of bits to be a multiple of 8
+//! let vec = bitvec![0b1111_0000];
+//! ```
 
-pub mod iter;
+pub use iter::{IntoIter, Iter};
 
 mod conversion;
 mod eq;
 mod fmt;
 mod index;
+mod iter;
 mod macros;
 
 /// A simple bit vector implementation.
@@ -47,9 +57,8 @@ impl BitVec {
 
     /// Creates a new empty [`BitVec`] with the specified capacity.
     ///
-    /// # Notes
-    ///
-    /// The final capacity will be `capacity - capacity % 8 + 8`.
+    /// The final capacity will be at least as large as
+    /// `(capacity / 8 + 1) * 8`.
     ///
     /// # Examples
     ///
@@ -57,7 +66,7 @@ impl BitVec {
     /// use bitvek::BitVec;
     ///
     /// let vec = BitVec::with_capacity(10);
-    /// assert_eq!(vec.capacity(), 16);
+    /// assert!(vec.capacity() >= 16);
     /// ```
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
@@ -70,22 +79,100 @@ impl BitVec {
 impl BitVec {
     /// Returns the total number of bits the vector can hold
     /// without reallocating.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bitvek::bitvec;
+    ///
+    /// let vec = bitvec![true, false, true, false];
+    /// assert!(vec.capacity() >= 8);
+    /// ```
+    ///
+    /// # Notes
+    ///
+    /// The capacity of the vector is always a multiple of 8.
     pub fn capacity(&self) -> usize {
         self.data.capacity() * 8
     }
 
     /// Returns the number of bits in the vector.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bitvek::bitvec;
+    ///
+    /// let vec = bitvec![true, false, true, false];
+    /// assert_eq!(vec.len(), 4);
+    /// ```
     pub fn len(&self) -> usize {
         self.data.len() * 8 - self.unused.value() as usize
     }
 
     /// Returns `true` if the vector contains no bits.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bitvek::bitvec;
+    ///
+    /// let vec = bitvec![];
+    /// assert!(vec.is_empty());
+    ///
+    /// let vec = bitvec![true, false, true, false];
+    /// assert!(!vec.is_empty());
+    /// ```
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 }
 
 impl BitVec {
+    /// Shrinks the capacity of the vector as much as possible.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bitvek::BitVec;
+    ///
+    /// let mut vec = BitVec::with_capacity(10);
+    /// vec.extend([true, false, true]);
+    /// assert!(vec.capacity() >= 16);
+    /// vec.shrink_to_fit();
+    /// assert!(vec.capacity() >= 8);
+    /// ```
+    pub fn shrink_to_fit(&mut self) -> &mut Self {
+        self.data.shrink_to_fit();
+        self
+    }
+
+    /// Shrinks the capacity of the vector with a lower bound.
+    ///
+    /// The capacity will remain at least as large as
+    /// `(self.len().max(min_capacity) / 8 + 1) * 8`.
+    ///
+    /// If the current capacity is less than the lower limit,
+    /// this is a no-op.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bitvek::BitVec;
+    ///
+    /// let mut vec = BitVec::with_capacity(20);
+    /// vec.extend([true, false, true]);
+    /// assert!(vec.capacity() >= 24);
+    /// vec.shrink_to(10);
+    /// assert!(vec.capacity() >= 16);
+    /// vec.shrink_to(0);
+    /// assert!(vec.capacity() >= 8);
+    /// ```
+    pub fn shrink_to(&mut self, min_capacity: usize) -> &mut Self {
+        self.data.shrink_to(min_capacity / 8 + 1);
+        self
+    }
+
     /// Returns the bit at the specified index, if in bounds.
     ///
     /// # Examples
