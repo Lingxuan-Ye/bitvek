@@ -62,24 +62,53 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_from_bool_slice() {
+    fn test_from_bytes() {
+        let expected = BitVec {
+            data: vec![0b1111_0000, 0b0000_1111],
+            unused: U3(0),
+        };
+        let bytes: [u8; 2] = [0b1111_0000, 0b0000_1111];
+
+        let bits = BitVec::from(&bytes[..]);
+        assert_eq!(bits, expected);
+
+        let bits = BitVec::from(bytes);
+        assert_eq!(bits, expected);
+
+        let bits = BitVec::from(bytes.to_vec());
+        assert_eq!(bits, expected);
+    }
+
+    #[test]
+    fn test_from_bools() {
         let expected = BitVec {
             data: vec![0b1010_0000],
             unused: U3(4),
         };
+        let bools = [true, false, true, false];
 
-        let vec = BitVec::from([true, false, true, false]);
-        assert_eq!(vec, expected);
+        let bits = BitVec::from(&bools[..]);
+        assert_eq!(bits, expected);
+
+        let bits = BitVec::from(bools);
+        assert_eq!(bits, expected);
+
+        let bits = BitVec::from(bools.to_vec());
+        assert_eq!(bits, expected);
     }
 
     #[test]
-    fn test_into_bool_vec() {
-        let bits = BitVec::from([true, false, true, false]);
+    fn test_into_bools() {
+        let expected = vec![true, false, true, false];
+        let bits = BitVec {
+            data: vec![0b1010_0000],
+            unused: U3(4),
+        };
 
         let bools: Vec<bool> = (&bits).into();
-        assert_eq!(bools, vec![true, false, true, false]);
+        assert_eq!(bools, expected);
 
         let bools: Vec<bool> = bits.into();
-        assert_eq!(bools, vec![true, false, true, false]);
+        assert_eq!(bools, expected);
     }
 }
