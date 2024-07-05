@@ -28,21 +28,36 @@ impl BitVec {
     }
 }
 
-impl FromIterator<bool> for BitVec {
-    fn from_iter<I>(iter: I) -> Self
+impl Extend<bool> for BitVec {
+    fn extend<I>(&mut self, iter: I)
     where
         I: IntoIterator<Item = bool>,
     {
-        let mut data = Vec::new();
         let mut iter = iter.into_iter();
 
-        let (last_byte, unused) = 'a: loop {
+        for _ in 0..self.unused.value() {
+            match iter.next() {
+                None => return,
+                Some(true) => {
+                    self.push(true);
+                }
+                Some(false) => {
+                    self.push(false);
+                }
+            }
+        }
+
+        loop {
             let mut byte: u8 = 0;
             for index in 0..8 {
                 match iter.next() {
                     None => {
-                        let unused = U3((8 - index) % 8);
-                        break 'a (byte, unused);
+                        let unused = (8 - index) % 8;
+                        if unused != 0 {
+                            self.data.push(byte);
+                        }
+                        self.unused = U3(unused);
+                        return;
                     }
                     Some(true) => {
                         byte |= 1 << (7 - index);
@@ -50,14 +65,19 @@ impl FromIterator<bool> for BitVec {
                     Some(false) => (),
                 }
             }
-            data.push(byte);
-        };
-
-        if unused != U3(0) {
-            data.push(last_byte);
+            self.data.push(byte);
         }
+    }
+}
 
-        Self { data, unused }
+impl FromIterator<bool> for BitVec {
+    fn from_iter<I>(iter: I) -> Self
+    where
+        I: IntoIterator<Item = bool>,
+    {
+        let mut vec = BitVec::new();
+        vec.extend(iter);
+        vec
     }
 }
 
