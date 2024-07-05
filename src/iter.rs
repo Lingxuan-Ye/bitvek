@@ -1,6 +1,3 @@
-//! This module defines several iterators for iterating over a [`BitVec`].
-//! You may not need to use them directly.
-
 use super::{BitVec, U3};
 use std::iter::FusedIterator;
 use std::ops::Range;

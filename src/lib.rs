@@ -25,12 +25,13 @@
 //! let vec = bitvec![0b1111_0000];
 //! ```
 
-pub mod iter;
+pub use iter::{IntoIter, Iter};
 
 mod conversion;
 mod eq;
 mod fmt;
 mod index;
+mod iter;
 mod macros;
 
 /// A simple bit vector implementation.
