@@ -1,5 +1,32 @@
 use super::{BitVec, U3};
 
+impl<const N: usize> From<[u8; N]> for BitVec {
+    fn from(value: [u8; N]) -> Self {
+        Self {
+            data: value.to_vec(),
+            unused: U3(0),
+        }
+    }
+}
+
+impl From<Vec<u8>> for BitVec {
+    fn from(value: Vec<u8>) -> Self {
+        Self {
+            data: value,
+            unused: U3(0),
+        }
+    }
+}
+
+impl From<&[u8]> for BitVec {
+    fn from(value: &[u8]) -> Self {
+        Self {
+            data: value.to_vec(),
+            unused: U3(0),
+        }
+    }
+}
+
 impl<const N: usize> From<[bool; N]> for BitVec {
     fn from(value: [bool; N]) -> Self {
         value.into_iter().collect()
