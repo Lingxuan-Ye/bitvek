@@ -185,6 +185,37 @@ mod tests {
     }
 
     #[test]
+    fn test_extend() {
+        let expected = BitVec {
+            data: vec![0b1010_0000],
+            unused: U3(4),
+        };
+
+        let mut vec = BitVec {
+            data: vec![0b1000_0000],
+            unused: U3(6),
+        };
+        vec.extend([true, false]);
+        assert_eq!(vec, expected);
+
+        let expected = BitVec {
+            data: vec![0b1010_1010, 0b1010_1010, 0b1010_0000],
+            unused: U3(4),
+        };
+
+        let mut vec = BitVec {
+            data: vec![0b1010_0000],
+            unused: U3(4),
+        };
+        vec.extend([
+            true, false, true, false, // first byte
+            true, false, true, false, true, false, true, false, // second byte
+            true, false, true, false, // final byte
+        ]);
+        assert_eq!(vec, expected);
+    }
+
+    #[test]
     fn test_from_iter() {
         let expected = BitVec {
             data: vec![0b1010_0000],
