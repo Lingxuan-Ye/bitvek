@@ -21,3 +21,9 @@ use bitvek::bitvec;
 
 let vec = bitvec![true, true, true, true, false, false, false, false];
 ```
+Find it cumbersome? Try this:
+
+```rust
+// requires the total number of bits to be a multiple of 8
+let vec = bitvec![0b1111_0000];
+```
