@@ -18,12 +18,21 @@ impl BitVec {
     }
 }
 
-impl<T> From<T> for BitVec
-where
-    T: AsRef<[bool]>,
-{
-    fn from(value: T) -> Self {
-        value.as_ref().iter().copied().collect()
+impl<const N: usize> From<[bool; N]> for BitVec {
+    fn from(value: [bool; N]) -> Self {
+        value.into_iter().collect()
+    }
+}
+
+impl From<Vec<bool>> for BitVec {
+    fn from(value: Vec<bool>) -> Self {
+        value.into_iter().collect()
+    }
+}
+
+impl From<&[bool]> for BitVec {
+    fn from(value: &[bool]) -> Self {
+        value.iter().copied().collect()
     }
 }
 
