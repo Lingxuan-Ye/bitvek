@@ -3,11 +3,11 @@
 /// [`BitVec`]: crate::BitVec
 #[macro_export]
 macro_rules! bitvec {
-    [$bit:expr; $n:expr] => {
-        $crate::BitVec::from([$bit; $n])
+    [$elem:expr; $n:expr] => {
+        $crate::BitVec::from([$elem; $n])
     };
 
-    [$($bit:expr),* $(,)?] => {
-        $crate::BitVec::from([$($bit,)*])
+    [$($elem:expr),* $(,)?] => {
+        $crate::BitVec::from([$($elem,)*])
     };
 }
