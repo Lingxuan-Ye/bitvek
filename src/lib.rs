@@ -1,4 +1,4 @@
-//! Say, we have a bit vector —
+//! Say, we have a bit vector ---
 //!
 //! it's nothing better than a [`Vec<bool>`], but ...
 //!
