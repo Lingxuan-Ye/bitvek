@@ -1,4 +1,4 @@
-//! Say, we have a bit vector ---
+//! Say, we have a bit vector —
 //!
 //! it's nothing better than a [`Vec<bool>`], but ...
 //!
@@ -423,7 +423,7 @@ mod tests {
         // unable to cover (run out of memory)
         // let mut vec = BitVec {
         //     data: vec![0; usize::MAX / 8],
-        //     uninit: U3::build(0).unwrap(),
+        //     unused: U3(0),
         // };
         //
         // assert!(vec.push(true).is_none());
