@@ -1,4 +1,4 @@
-//! Say, we have a bit vector ---
+//! Say, we have a bit vector —
 //!
 //! it's nothing better than a [`Vec<bool>`], but ...
 //!
@@ -8,12 +8,15 @@
 //!
 //! # Quick Start
 //!
-//! The following vector only takes **one** byte of the heap memory!
+//! The following vector only takes **two** bytes of the heap memory!
 //!
 //! ```
 //! use bitvek::bitvec;
 //!
-//! let vec = bitvec![true, true, true, true, false, false, false, false];
+//! let vec = bitvec![
+//!     true, true, true, true, false, false, false, false,
+//!     false, false, false, false, true, true, true, true,
+//! ];
 //! ```
 //!
 //! Find it cumbersome? Try this:
@@ -22,7 +25,7 @@
 //! # use bitvek::bitvec;
 //! #
 //! // requires the total number of bits to be a multiple of 8
-//! let vec = bitvec![0b1111_0000];
+//! let vec = bitvec![0b1111_0000, 0b0000_1111];
 //! ```
 
 pub use iter::{IntoIter, Iter};
@@ -423,7 +426,7 @@ mod tests {
         // unable to cover (run out of memory)
         // let mut vec = BitVec {
         //     data: vec![0; usize::MAX / 8],
-        //     uninit: U3::build(0).unwrap(),
+        //     unused: U3(0),
         // };
         //
         // assert!(vec.push(true).is_none());
