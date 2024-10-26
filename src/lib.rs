@@ -30,7 +30,7 @@
 
 pub use iter::{IntoIter, Iter};
 
-mod conversion;
+mod convert;
 mod eq;
 mod fmt;
 mod index;
