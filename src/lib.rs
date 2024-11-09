@@ -1,5 +1,6 @@
 pub use self::iter::{IntoIter, Iter};
 
+mod fmt;
 mod iter;
 
 const WORD_WIDTH: usize = usize::BITS as usize;
