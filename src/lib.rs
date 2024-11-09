@@ -1,3 +1,7 @@
+pub use self::iter::{IntoIter, Iter};
+
+mod iter;
+
 const WORD_WIDTH: usize = usize::BITS as usize;
 
 #[derive(Clone, Default)]
