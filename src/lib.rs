@@ -1,10 +1,13 @@
 pub use self::iter::{IntoIter, Iter};
 
+mod convert;
 mod extend;
 mod fmt;
 mod iter;
 
+const BITS_PER_BYTE: usize = u8::BITS as usize;
 const BITS_PER_WORD: usize = usize::BITS as usize;
+const BYTES_PER_WORD: usize = std::mem::size_of::<usize>();
 
 #[derive(Clone, Default)]
 pub struct BitVec {
