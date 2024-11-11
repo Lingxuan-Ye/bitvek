@@ -4,7 +4,7 @@ mod extend;
 mod fmt;
 mod iter;
 
-const WORD_WIDTH: usize = usize::BITS as usize;
+const BITS_PER_WORD: usize = usize::BITS as usize;
 
 #[derive(Clone, Default)]
 pub struct BitVec {
@@ -27,7 +27,7 @@ impl BitVec {
 
 impl BitVec {
     pub fn capacity(&self) -> usize {
-        self.data.capacity().saturating_mul(WORD_WIDTH)
+        self.data.capacity().saturating_mul(BITS_PER_WORD)
     }
 
     pub fn len(&self) -> usize {
@@ -49,9 +49,9 @@ impl BitVec {
     }
 
     pub unsafe fn get_unchecked(&self, index: usize) -> bool {
-        let (div, rem) = (index / WORD_WIDTH, index % WORD_WIDTH);
+        let (div, rem) = (index / BITS_PER_WORD, index % BITS_PER_WORD);
         let word = unsafe { self.data.get_unchecked(div) };
-        let mask = 1 << (WORD_WIDTH - 1 - rem);
+        let mask = 1 << (BITS_PER_WORD - 1 - rem);
         word & mask != 0
     }
 
@@ -64,9 +64,9 @@ impl BitVec {
     }
 
     pub unsafe fn set_unchecked(&mut self, index: usize, value: bool) -> &mut Self {
-        let (div, rem) = (index / WORD_WIDTH, index % WORD_WIDTH);
+        let (div, rem) = (index / BITS_PER_WORD, index % BITS_PER_WORD);
         let word = unsafe { self.data.get_unchecked_mut(div) };
-        let mask = 1 << (WORD_WIDTH - 1 - rem);
+        let mask = 1 << (BITS_PER_WORD - 1 - rem);
         if value {
             *word |= mask;
         } else {
@@ -79,10 +79,10 @@ impl BitVec {
         if self.len == usize::MAX {
             return None;
         }
-        if self.len != self.data.len() * WORD_WIDTH {
+        if self.len != self.data.len() * BITS_PER_WORD {
             unsafe { self.set_unchecked(self.len, value) };
         } else if value {
-            self.data.push(const { 1 << (WORD_WIDTH - 1) });
+            self.data.push(const { 1 << (BITS_PER_WORD - 1) });
         } else {
             self.data.push(0);
         }
@@ -97,7 +97,7 @@ impl BitVec {
         self.len -= 1;
         let last = self.data.len() - 1;
         unsafe {
-            if self.len != last * WORD_WIDTH {
+            if self.len != last * BITS_PER_WORD {
                 Some(self.get_unchecked(self.len))
             } else {
                 self.data.set_len(last);
@@ -123,7 +123,7 @@ impl BitVec {
         if bits == 0 {
             0
         } else {
-            (bits - 1) / WORD_WIDTH + 1
+            (bits - 1) / BITS_PER_WORD + 1
         }
     }
 }
