@@ -26,7 +26,7 @@ impl BitVec {
 
 impl BitVec {
     pub fn capacity(&self) -> usize {
-        self.data.capacity() * WORD_WIDTH
+        self.data.capacity().saturating_mul(WORD_WIDTH)
     }
 
     pub fn len(&self) -> usize {
