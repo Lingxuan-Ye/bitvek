@@ -1,5 +1,6 @@
 pub use self::iter::{IntoIter, Iter};
 
+mod extend;
 mod fmt;
 mod iter;
 
