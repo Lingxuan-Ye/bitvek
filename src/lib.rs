@@ -3,6 +3,7 @@ pub use self::iter::{IntoIter, Iter};
 mod convert;
 mod extend;
 mod fmt;
+mod index;
 mod iter;
 
 const BITS_PER_BYTE: usize = u8::BITS as usize;
