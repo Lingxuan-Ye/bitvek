@@ -1,8 +1,8 @@
-use super::{BitVec, BITS_PER_BYTE, BYTES_PER_WORD};
+use super::{BitVec, BYTES_PER_WORD};
 
 impl BitVec {
     pub fn from_bytes(bytes: &[u8]) -> Self {
-        let len = bytes.len() * BITS_PER_BYTE;
+        let len = bytes.len() * 8;
         let capacity = Self::word_count(len);
         let mut data = Vec::with_capacity(capacity);
         let iter = bytes.chunks_exact(BYTES_PER_WORD);
