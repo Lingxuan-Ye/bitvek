@@ -99,16 +99,19 @@ impl BitVec {
         if self.is_empty() {
             return None;
         }
-        self.len -= 1;
-        let last = self.data.len() - 1;
+        let last_bit = self.len - 1;
+        let last_word = self.data.len() - 1;
+        let value;
         unsafe {
-            if self.len != last * BITS_PER_WORD {
-                Some(self.get_unchecked(self.len))
+            if last_bit != last_word * BITS_PER_WORD {
+                value = self.get_unchecked(last_bit);
             } else {
-                self.data.set_len(last);
-                Some(*self.data.get_unchecked(last) != 0)
+                value = *self.data.get_unchecked(last_word) != 0;
+                self.data.set_len(last_word);
             }
-        }
+        };
+        self.len = last_bit;
+        Some(value)
     }
 
     pub fn shrink_to_fit(&mut self) -> &mut Self {
