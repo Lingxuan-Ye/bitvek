@@ -1,6 +1,7 @@
 pub use self::iter::{IntoIter, Iter};
 
 mod convert;
+mod eq;
 mod extend;
 mod fmt;
 mod index;
