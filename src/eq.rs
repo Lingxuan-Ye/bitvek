@@ -5,6 +5,9 @@ impl PartialEq for BitVec {
         if self.len != other.len {
             return false;
         }
+        if self.is_empty() {
+            return true;
+        }
         let last = self.data.len() - 1;
         if self.data[..last] != other.data[..last] {
             return false;
