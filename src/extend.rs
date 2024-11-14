@@ -17,3 +17,22 @@ impl Extend<bool> for BitVec {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::bitvec;
+
+    #[test]
+    fn test_extend() {
+        let mut vec = bitvec![true, false];
+        vec.extend([true, false]);
+        assert_eq!(vec, bitvec![true, false, true, false]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_extend_fail() {
+        let mut vec = bitvec![true, false];
+        vec.extend(std::iter::repeat(true).take(usize::MAX));
+    }
+}

@@ -78,3 +78,34 @@ impl DoubleEndedIterator for IntoIter {
 
 impl ExactSizeIterator for IntoIter {}
 impl FusedIterator for IntoIter {}
+
+#[cfg(test)]
+mod tests {
+    use crate::bitvec;
+
+    #[test]
+    fn test_iter() {
+        let vec = bitvec![true, false, true, false];
+        let mut iter = vec.iter();
+        assert_eq!(iter.len(), 4);
+        assert_eq!(iter.next(), Some(true));
+        assert_eq!(iter.next(), Some(false));
+        assert_eq!(iter.next_back(), Some(false));
+        assert_eq!(iter.next_back(), Some(true));
+        assert_eq!(iter.next_back(), None);
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn test_into_iter() {
+        let vec = bitvec![true, false, true, false];
+        let mut iter = vec.into_iter();
+        assert_eq!(iter.len(), 4);
+        assert_eq!(iter.next(), Some(true));
+        assert_eq!(iter.next(), Some(false));
+        assert_eq!(iter.next_back(), Some(false));
+        assert_eq!(iter.next_back(), Some(true));
+        assert_eq!(iter.next_back(), None);
+        assert_eq!(iter.next(), None);
+    }
+}
