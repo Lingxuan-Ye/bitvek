@@ -60,6 +60,7 @@ impl BitVec {
         word & mask != 0
     }
 
+    #[must_use]
     pub fn set(&mut self, index: usize, value: bool) -> Option<&mut Self> {
         if index >= self.len {
             None
