@@ -11,9 +11,11 @@ impl BitVec {
             let bytes = unsafe { chunk.try_into().unwrap_unchecked() };
             data.push(usize::from_be_bytes(bytes));
         }
-        let mut last = [0; BYTES_PER_WORD];
-        last[..remainder.len()].copy_from_slice(remainder);
-        data.push(usize::from_be_bytes(last));
+        if !remainder.is_empty() {
+            let mut last = [0; BYTES_PER_WORD];
+            last[..remainder.len()].copy_from_slice(remainder);
+            data.push(usize::from_be_bytes(last));
+        }
         Self { data, len }
     }
 }
