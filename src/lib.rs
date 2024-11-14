@@ -80,9 +80,9 @@ impl BitVec {
         self
     }
 
-    pub fn push(&mut self, value: bool) -> Option<&mut Self> {
+    pub fn push(&mut self, value: bool) -> &mut Self {
         if self.len == usize::MAX {
-            return None;
+            panic!("capacity overflow")
         }
         if self.len != self.data.len() * BITS_PER_WORD {
             unsafe { self.set_unchecked(self.len, value) };
@@ -92,7 +92,7 @@ impl BitVec {
             self.data.push(0);
         }
         self.len += 1;
-        Some(self)
+        self
     }
 
     pub fn pop(&mut self) -> Option<bool> {

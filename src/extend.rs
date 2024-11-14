@@ -13,7 +13,7 @@ impl Extend<bool> for BitVec {
         let additional = Self::word_count(new_len_lower_limit) - self.data.len();
         self.data.reserve(additional);
         for value in iter {
-            self.push(value).expect("capacity overflow");
+            self.push(value);
         }
     }
 }

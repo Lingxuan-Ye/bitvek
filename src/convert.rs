@@ -26,7 +26,7 @@ impl FromIterator<bool> for BitVec {
         let iter = iter.into_iter();
         let mut vec = BitVec::with_capacity(iter.size_hint().0);
         for value in iter {
-            vec.push(value).expect("capacity overflow");
+            vec.push(value);
         }
         vec
     }
