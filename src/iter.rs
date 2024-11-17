@@ -3,6 +3,23 @@ use std::iter::FusedIterator;
 use std::ops::Range;
 
 impl BitVec {
+    /// Returns an iterator over the bits of the vector.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bitvek::bitvec;
+    ///
+    /// let vec = bitvec![true, true, false, false];
+    /// let mut iter = vec.iter();
+    ///
+    /// assert_eq!(iter.next(), Some(true));
+    /// assert_eq!(iter.next(), Some(true));
+    /// assert_eq!(iter.next_back(), Some(false));
+    /// assert_eq!(iter.next_back(), Some(false));
+    /// assert_eq!(iter.next(), None);
+    /// assert_eq!(iter.next_back(), None);
+    /// ```
     pub fn iter(&self) -> Iter<'_> {
         let vec = self;
         let range = 0..vec.len;
@@ -21,6 +38,7 @@ impl IntoIterator for BitVec {
     }
 }
 
+/// An iterator over the bits of a vector.
 #[derive(Clone, Debug)]
 pub struct Iter<'a> {
     vec: &'a BitVec,
@@ -50,6 +68,7 @@ impl DoubleEndedIterator for Iter<'_> {
 impl ExactSizeIterator for Iter<'_> {}
 impl FusedIterator for Iter<'_> {}
 
+/// An owning iterator over the bits of a vector.
 #[derive(Clone, Debug)]
 pub struct IntoIter {
     vec: BitVec,

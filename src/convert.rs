@@ -1,6 +1,16 @@
 use super::{BitVec, BYTES_PER_WORD};
 
 impl BitVec {
+    /// Creates a new `BitVec` from the given bytes.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bitvek::{bitvec, BitVec};
+    ///
+    /// let vec = BitVec::from_bytes(&[0b11110000]);
+    /// assert_eq!(vec, bitvec![true, true, true, true, false, false, false, false]);
+    /// ```
     pub fn from_bytes(bytes: &[u8]) -> Self {
         let len = bytes.len() * 8;
         let capacity = Self::word_count(len);
