@@ -14,8 +14,6 @@ and save some poor bits of memory?
 
 ## Quick Start
 
-The following vector only takes **two** bytes of the heap memory!
-
 ```rust
 use bitvek::bitvec;
 
@@ -24,9 +22,14 @@ let vec = bitvec![
     false, false, false, false, true, true, true, true,
 ];
 ```
+
 Find it cumbersome? Try this:
 
 ```rust
 // requires the total number of bits to be a multiple of 8
-let vec = bitvec![0b1111_0000, 0b0000_1111];
+let vec = bitvec![0b11110000, 0b00001111];
 ```
+
+## Memory Efficiency
+
+To achieve memory savings, the total number of bits stored must exceed twice the machine word the size in bytes, corresponding to 8 for 32-bit systems and 16 for 64-bit systems.

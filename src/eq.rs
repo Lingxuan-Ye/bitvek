@@ -1,25 +1,18 @@
-use super::BitVec;
+use super::{BitVec, BITS_PER_WORD};
 
 impl PartialEq for BitVec {
     fn eq(&self, other: &Self) -> bool {
-        let mut lhs = self.data.iter();
-        let mut rhs = other.data.iter();
-
-        match (lhs.next_back(), rhs.next_back()) {
-            (Some(l), Some(r)) => {
-                let lunused = self.unused.value();
-                let runused = other.unused.value();
-                if lunused != runused {
-                    return false;
-                }
-                if (l >> lunused) != (r >> runused) {
-                    return false;
-                }
-                lhs.eq(rhs)
-            }
-            (None, None) => true,
-            _ => false,
+        if self.len != other.len {
+            return false;
         }
+        if self.is_empty() {
+            return true;
+        }
+        let last = self.data.len() - 1;
+        if self.data[..last] != other.data[..last] {
+            return false;
+        }
+        (self.data[last] ^ other.data[last]) >> (self.data.len() * BITS_PER_WORD - self.len) == 0
     }
 }
 
@@ -28,50 +21,36 @@ impl Eq for BitVec {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::U3;
+    use crate::bitvec;
 
     #[test]
     fn test_eq() {
-        let expected = BitVec {
-            data: vec![0b1111_0000, 0b0000_1111],
-            unused: U3(2),
-        };
+        let lhs = bitvec![true, false, true, false];
 
-        let vec = BitVec {
-            data: vec![0b1111_0000, 0b0000_1111],
-            unused: U3(3),
-        };
-        assert_ne!(vec, expected);
+        let rhs = bitvec![true, false, true, false];
+        assert_eq!(lhs, rhs);
 
-        let vec = BitVec {
-            data: vec![0b1111_0000, 0b1100_1111],
-            unused: U3(2),
-        };
-        assert_ne!(vec, expected);
+        let rhs = bitvec![true, true, false, false];
+        assert_ne!(lhs, rhs);
 
-        let vec = BitVec {
-            data: vec![0b1111_0000, 0b0000_1111, 0b1111_0000],
-            unused: U3(2),
-        };
-        assert_ne!(vec, expected);
+        let mut rhs = bitvec![true, false, true, false, true];
+        assert_ne!(lhs, rhs);
+        rhs.pop();
+        assert_ne!(lhs.data, rhs.data);
+        assert_eq!(lhs, rhs);
 
-        let vec = BitVec {
-            data: vec![0b1111_0000, 0b0000_1111],
-            unused: U3(2),
-        };
-        assert_eq!(vec, expected);
+        let lhs = bitvec![true; BITS_PER_WORD + 1];
 
-        let vec = BitVec {
-            data: vec![0b1111_0000, 0b0000_1100],
-            unused: U3(2),
-        };
-        assert_eq!(vec, expected);
+        let rhs = bitvec![true; BITS_PER_WORD + 1];
+        assert_eq!(lhs, rhs);
 
-        let vec = BitVec::new();
-        assert_ne!(vec, expected);
-        assert_ne!(expected, vec);
+        let rhs = bitvec![false; BITS_PER_WORD + 1];
+        assert_ne!(lhs, rhs);
 
-        let expected = BitVec::new();
-        assert_eq!(vec, expected);
+        let mut rhs = bitvec![true; BITS_PER_WORD + 2];
+        assert_ne!(lhs, rhs);
+        rhs.pop();
+        assert_ne!(lhs.data, rhs.data);
+        assert_eq!(lhs, rhs);
     }
 }

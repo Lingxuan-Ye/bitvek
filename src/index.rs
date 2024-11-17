@@ -1,7 +1,6 @@
 use super::BitVec;
-use std::ops::Index;
 
-impl Index<usize> for BitVec {
+impl std::ops::Index<usize> for BitVec {
     type Output = bool;
 
     fn index(&self, index: usize) -> &Self::Output {
