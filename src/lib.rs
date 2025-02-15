@@ -257,7 +257,11 @@ impl BitVec {
         if self.len == usize::MAX {
             panic!("capacity overflow")
         }
-        if self.len != self.data.len() * BITS_PER_WORD {
+        if self.len % BITS_PER_WORD != 0 {
+            // `self.len` as an index is out of bounds and directly
+            // violates the safety contract of `Self::set_unchecked`.
+            // However, this code is safe due to a full understanding
+            // of its internal implementation.
             unsafe { self.set_unchecked(self.len, value) };
         } else if value {
             self.data.push(const { 1 << (BITS_PER_WORD - 1) });
@@ -284,15 +288,14 @@ impl BitVec {
         if self.is_empty() {
             return None;
         }
-        let last_bit = self.len - 1;
-        let last_word = self.data.len() - 1;
-        let value = unsafe { self.get_unchecked(last_bit) };
-        if last_bit == last_word * BITS_PER_WORD {
+        let last = self.len - 1;
+        let value = unsafe { self.get_unchecked(last) };
+        if last % BITS_PER_WORD == 0 {
             unsafe {
-                self.data.set_len(last_word);
+                self.data.set_len(self.data.len() - 1);
             }
         }
-        self.len = last_bit;
+        self.len = last;
         Some(value)
     }
 
