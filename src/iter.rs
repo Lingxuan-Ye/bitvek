@@ -20,6 +20,7 @@ impl BitVec {
     /// assert_eq!(iter.next(), None);
     /// assert_eq!(iter.next_back(), None);
     /// ```
+    #[inline]
     pub fn iter(&self) -> Iter<'_> {
         let vec = self;
         let range = 0..vec.len;
@@ -31,6 +32,7 @@ impl IntoIterator for BitVec {
     type Item = bool;
     type IntoIter = IntoIter;
 
+    #[inline]
     fn into_iter(self) -> Self::IntoIter {
         let vec = self;
         let range = 0..vec.len;
@@ -48,17 +50,20 @@ pub struct Iter<'a> {
 impl Iterator for Iter<'_> {
     type Item = bool;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         let index = self.range.next()?;
         unsafe { Some(self.vec.get_unchecked(index)) }
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.range.size_hint()
     }
 }
 
 impl DoubleEndedIterator for Iter<'_> {
+    #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         let index = self.range.next_back()?;
         unsafe { Some(self.vec.get_unchecked(index)) }
@@ -78,17 +83,20 @@ pub struct IntoIter {
 impl Iterator for IntoIter {
     type Item = bool;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         let index = self.range.next()?;
         unsafe { Some(self.vec.get_unchecked(index)) }
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.range.size_hint()
     }
 }
 
 impl DoubleEndedIterator for IntoIter {
+    #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         let index = self.range.next_back()?;
         unsafe { Some(self.vec.get_unchecked(index)) }

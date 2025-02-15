@@ -48,48 +48,56 @@ impl FromIterator<bool> for BitVec {
 }
 
 impl<const N: usize> From<[u8; N]> for BitVec {
+    #[inline]
     fn from(value: [u8; N]) -> Self {
         Self::from_bytes(&value)
     }
 }
 
 impl From<Vec<u8>> for BitVec {
+    #[inline]
     fn from(value: Vec<u8>) -> Self {
         Self::from_bytes(&value)
     }
 }
 
 impl From<&[u8]> for BitVec {
+    #[inline]
     fn from(value: &[u8]) -> Self {
         Self::from_bytes(value)
     }
 }
 
 impl<const N: usize> From<[bool; N]> for BitVec {
+    #[inline]
     fn from(value: [bool; N]) -> Self {
         value.into_iter().collect()
     }
 }
 
 impl From<Vec<bool>> for BitVec {
+    #[inline]
     fn from(value: Vec<bool>) -> Self {
         value.into_iter().collect()
     }
 }
 
 impl From<&[bool]> for BitVec {
+    #[inline]
     fn from(value: &[bool]) -> Self {
         value.iter().copied().collect()
     }
 }
 
 impl From<BitVec> for Vec<bool> {
+    #[inline]
     fn from(value: BitVec) -> Self {
         value.into_iter().collect()
     }
 }
 
 impl From<&BitVec> for Vec<bool> {
+    #[inline]
     fn from(value: &BitVec) -> Self {
         value.iter().collect()
     }

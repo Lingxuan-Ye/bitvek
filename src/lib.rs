@@ -62,6 +62,7 @@ impl BitVec {
     ///
     /// let vec = BitVec::new();
     /// ```
+    #[inline]
     pub fn new() -> Self {
         Default::default()
     }
@@ -81,6 +82,7 @@ impl BitVec {
     /// assert_eq!(vec.len(), 0);
     /// assert!(vec.capacity() >= 10);
     /// ```
+    #[inline]
     pub fn with_capacity(capacity: usize) -> Self {
         let capacity = Self::word_count(capacity);
         let data = Vec::with_capacity(capacity);
@@ -102,6 +104,7 @@ impl BitVec {
     /// vec.push(true);
     /// assert!(vec.capacity() >= 10);
     /// ```
+    #[inline]
     pub fn capacity(&self) -> usize {
         self.data.capacity().saturating_mul(BITS_PER_WORD)
     }
@@ -116,6 +119,7 @@ impl BitVec {
     /// let vec = bitvec![true, true, false, false];
     /// assert_eq!(vec.len(), 4);
     /// ```
+    #[inline]
     pub fn len(&self) -> usize {
         self.len
     }
@@ -133,6 +137,7 @@ impl BitVec {
     /// let vec = bitvec![true, true, false, false];
     /// assert!(!vec.is_empty());
     /// ```
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.len == 0
     }
@@ -150,6 +155,7 @@ impl BitVec {
     /// assert_eq!(vec.get(3), Some(false));
     /// assert_eq!(vec.get(4), None);
     /// ```
+    #[inline]
     pub fn get(&self, index: usize) -> Option<bool> {
         if index >= self.len {
             None
@@ -196,6 +202,7 @@ impl BitVec {
     /// assert!(vec.set(4, true).is_none());
     /// assert_eq!(vec, bitvec![true; 4]);
     /// ```
+    #[inline]
     #[must_use]
     pub fn set(&mut self, index: usize, value: bool) -> Option<&mut Self> {
         if index >= self.len {
@@ -312,6 +319,7 @@ impl BitVec {
     /// vec.shrink_to_fit();
     /// assert!(vec.capacity() >= 4);
     /// ```
+    #[inline]
     pub fn shrink_to_fit(&mut self) -> &mut Self {
         self.data.shrink_to_fit();
         self
@@ -335,6 +343,7 @@ impl BitVec {
     /// vec.shrink_to(0);
     /// assert!(vec.capacity() >= 4);
     /// ```
+    #[inline]
     pub fn shrink_to(&mut self, min_capacity: usize) -> &mut Self {
         let min_capacity = Self::word_count(min_capacity);
         self.data.shrink_to(min_capacity);
