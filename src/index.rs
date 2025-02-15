@@ -3,6 +3,7 @@ use super::BitVec;
 impl std::ops::Index<usize> for BitVec {
     type Output = bool;
 
+    #[inline]
     fn index(&self, index: usize) -> &Self::Output {
         match self.get(index) {
             Some(true) => &true,

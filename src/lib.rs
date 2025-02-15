@@ -43,7 +43,7 @@ mod iter;
 mod macros;
 
 const BITS_PER_WORD: usize = usize::BITS as usize;
-const BYTES_PER_WORD: usize = std::mem::size_of::<usize>();
+const BYTES_PER_WORD: usize = size_of::<usize>();
 
 // As the name suggests, this is a bit vector.
 #[derive(Clone, Default)]
@@ -62,6 +62,7 @@ impl BitVec {
     ///
     /// let vec = BitVec::new();
     /// ```
+    #[inline]
     pub fn new() -> Self {
         Default::default()
     }
@@ -81,6 +82,7 @@ impl BitVec {
     /// assert_eq!(vec.len(), 0);
     /// assert!(vec.capacity() >= 10);
     /// ```
+    #[inline]
     pub fn with_capacity(capacity: usize) -> Self {
         let capacity = Self::word_count(capacity);
         let data = Vec::with_capacity(capacity);
@@ -102,6 +104,7 @@ impl BitVec {
     /// vec.push(true);
     /// assert!(vec.capacity() >= 10);
     /// ```
+    #[inline]
     pub fn capacity(&self) -> usize {
         self.data.capacity().saturating_mul(BITS_PER_WORD)
     }
@@ -116,6 +119,7 @@ impl BitVec {
     /// let vec = bitvec![true, true, false, false];
     /// assert_eq!(vec.len(), 4);
     /// ```
+    #[inline]
     pub fn len(&self) -> usize {
         self.len
     }
@@ -133,6 +137,7 @@ impl BitVec {
     /// let vec = bitvec![true, true, false, false];
     /// assert!(!vec.is_empty());
     /// ```
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.len == 0
     }
@@ -150,6 +155,7 @@ impl BitVec {
     /// assert_eq!(vec.get(3), Some(false));
     /// assert_eq!(vec.get(4), None);
     /// ```
+    #[inline]
     pub fn get(&self, index: usize) -> Option<bool> {
         if index >= self.len {
             None
@@ -196,6 +202,7 @@ impl BitVec {
     /// assert!(vec.set(4, true).is_none());
     /// assert_eq!(vec, bitvec![true; 4]);
     /// ```
+    #[inline]
     #[must_use]
     pub fn set(&mut self, index: usize, value: bool) -> Option<&mut Self> {
         if index >= self.len {
@@ -257,7 +264,11 @@ impl BitVec {
         if self.len == usize::MAX {
             panic!("capacity overflow")
         }
-        if self.len != self.data.len() * BITS_PER_WORD {
+        if self.len % BITS_PER_WORD != 0 {
+            // `self.len` as an index is out of bounds and directly
+            // violates the safety contract of `Self::set_unchecked`.
+            // However, this code is safe due to a full understanding
+            // of its internal implementation.
             unsafe { self.set_unchecked(self.len, value) };
         } else if value {
             self.data.push(const { 1 << (BITS_PER_WORD - 1) });
@@ -284,18 +295,14 @@ impl BitVec {
         if self.is_empty() {
             return None;
         }
-        let last_bit = self.len - 1;
-        let last_word = self.data.len() - 1;
-        let value;
-        unsafe {
-            if last_bit != last_word * BITS_PER_WORD {
-                value = self.get_unchecked(last_bit);
-            } else {
-                value = *self.data.get_unchecked(last_word) != 0;
-                self.data.set_len(last_word);
+        let last = self.len - 1;
+        let value = unsafe { self.get_unchecked(last) };
+        if last % BITS_PER_WORD == 0 {
+            unsafe {
+                self.data.set_len(self.data.len() - 1);
             }
-        };
-        self.len = last_bit;
+        }
+        self.len = last;
         Some(value)
     }
 
@@ -312,6 +319,7 @@ impl BitVec {
     /// vec.shrink_to_fit();
     /// assert!(vec.capacity() >= 4);
     /// ```
+    #[inline]
     pub fn shrink_to_fit(&mut self) -> &mut Self {
         self.data.shrink_to_fit();
         self
@@ -335,6 +343,7 @@ impl BitVec {
     /// vec.shrink_to(0);
     /// assert!(vec.capacity() >= 4);
     /// ```
+    #[inline]
     pub fn shrink_to(&mut self, min_capacity: usize) -> &mut Self {
         let min_capacity = Self::word_count(min_capacity);
         self.data.shrink_to(min_capacity);
@@ -479,6 +488,11 @@ mod tests {
         assert_eq!(vec, bitvec![]);
         assert_eq!(vec.pop(), None);
         assert_eq!(vec, bitvec![]);
+
+        let mut vec = bitvec![false; BITS_PER_WORD + 1];
+        vec.push(true);
+        assert_eq!(vec.pop(), Some(true));
+        assert_eq!(vec.pop(), Some(false));
 
         let mut vec = bitvec![true; BITS_PER_WORD + 1];
         while vec.pop().is_some() {}

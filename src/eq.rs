@@ -9,10 +9,12 @@ impl PartialEq for BitVec {
             return true;
         }
         let last = self.data.len() - 1;
-        if self.data[..last] != other.data[..last] {
+        if unsafe { self.data.get_unchecked(..last) != other.data.get_unchecked(..last) } {
             return false;
         }
-        (self.data[last] ^ other.data[last]) >> (self.data.len() * BITS_PER_WORD - self.len) == 0
+        let xor = unsafe { self.data.get_unchecked(last) ^ other.data.get_unchecked(last) };
+        let unused = self.data.len() * BITS_PER_WORD - self.len;
+        xor >> unused == 0
     }
 }
 
