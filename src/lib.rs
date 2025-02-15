@@ -28,9 +28,9 @@
 //!
 //! # Memory Efficiency
 //!
-//! To achieve memory savings, the total number of bits stored must exceed
-//! twice the machine word the size in bytes, corresponding to 8 for 32-bit
-//! systems and 16 for 64-bit systems.
+//! To achieve memory savings, the total number of bits stored must
+//! exceed twice the machine word size in bytes, corresponding to 8
+//! for 32-bit systems and 16 for 64-bit systems.
 
 pub use self::iter::{IntoIter, Iter};
 
