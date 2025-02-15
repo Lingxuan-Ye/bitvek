@@ -43,7 +43,7 @@ mod iter;
 mod macros;
 
 const BITS_PER_WORD: usize = usize::BITS as usize;
-const BYTES_PER_WORD: usize = std::mem::size_of::<usize>();
+const BYTES_PER_WORD: usize = size_of::<usize>();
 
 // As the name suggests, this is a bit vector.
 #[derive(Clone, Default)]
