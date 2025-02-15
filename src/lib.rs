@@ -286,15 +286,12 @@ impl BitVec {
         }
         let last_bit = self.len - 1;
         let last_word = self.data.len() - 1;
-        let value;
-        unsafe {
-            if last_bit != last_word * BITS_PER_WORD {
-                value = self.get_unchecked(last_bit);
-            } else {
-                value = *self.data.get_unchecked(last_word) != 0;
+        let value = unsafe { self.get_unchecked(last_bit) };
+        if last_bit == last_word * BITS_PER_WORD {
+            unsafe {
                 self.data.set_len(last_word);
             }
-        };
+        }
         self.len = last_bit;
         Some(value)
     }
@@ -479,6 +476,11 @@ mod tests {
         assert_eq!(vec, bitvec![]);
         assert_eq!(vec.pop(), None);
         assert_eq!(vec, bitvec![]);
+
+        let mut vec = bitvec![false; BITS_PER_WORD + 1];
+        vec.push(true);
+        assert_eq!(vec.pop(), Some(true));
+        assert_eq!(vec.pop(), Some(false));
 
         let mut vec = bitvec![true; BITS_PER_WORD + 1];
         while vec.pop().is_some() {}
