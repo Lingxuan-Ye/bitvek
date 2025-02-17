@@ -269,7 +269,9 @@ impl BitVec {
             // violates the safety contract of `Self::set_unchecked`.
             // However, this code is safe due to a full understanding
             // of its internal implementation.
-            unsafe { self.set_unchecked(self.len, value) };
+            unsafe {
+                self.set_unchecked(self.len, value);
+            }
         } else if value {
             self.data.push(const { 1 << (BITS_PER_WORD - 1) });
         } else {
