@@ -34,6 +34,7 @@
 
 pub use self::iter::{IntoIter, Iter};
 
+mod bitwise;
 mod convert;
 mod eq;
 mod extend;
