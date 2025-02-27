@@ -1,4 +1,4 @@
-use super::{BitVec, BYTES_PER_WORD};
+use super::{BYTES_PER_WORD, BitVec};
 
 impl BitVec {
     /// Creates a new `BitVec` from the given bytes.

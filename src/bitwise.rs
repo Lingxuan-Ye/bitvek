@@ -38,7 +38,7 @@ impl BitVec {
 
 #[cfg(test)]
 mod tests {
-    use crate::{bitvec, BITS_PER_WORD};
+    use crate::{BITS_PER_WORD, bitvec};
 
     const LONG: usize = BITS_PER_WORD * 2 - 2;
     const SHORT: usize = BITS_PER_WORD - 1;
