@@ -2,7 +2,7 @@
 
 [![Crates.io](https://img.shields.io/crates/v/bitvek.svg)](https://crates.io/crates/bitvek)
 [![Documentation](https://docs.rs/bitvek/badge.svg)](https://docs.rs/bitvek)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 Say, we have a bit vector —
 
