@@ -32,7 +32,13 @@
 //! exceed twice the machine word size in bytes, corresponding to 8
 //! for 32-bit systems and 16 for 64-bit systems.
 
+#![no_std]
+
+extern crate alloc;
+
 pub use self::iter::{IntoIter, Iter};
+
+use alloc::vec::Vec;
 
 mod bitwise;
 mod convert;
@@ -368,6 +374,7 @@ impl BitVec {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use alloc::vec;
 
     #[test]
     fn test_new() {

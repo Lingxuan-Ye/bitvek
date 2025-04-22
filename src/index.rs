@@ -1,6 +1,7 @@
 use crate::BitVec;
+use core::ops::Index;
 
-impl std::ops::Index<usize> for BitVec {
+impl Index<usize> for BitVec {
     type Output = bool;
 
     #[inline]

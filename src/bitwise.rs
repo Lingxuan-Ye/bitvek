@@ -1,6 +1,6 @@
 use crate::BitVec;
-use std::cmp::min;
-use std::iter::zip;
+use core::cmp::min;
+use core::iter::zip;
 
 mod and;
 mod not;

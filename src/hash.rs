@@ -1,5 +1,5 @@
 use crate::{BITS_PER_WORD, BitVec};
-use std::hash::{Hash, Hasher};
+use core::hash::{Hash, Hasher};
 
 impl Hash for BitVec {
     fn hash<H>(&self, state: &mut H)
@@ -19,6 +19,8 @@ impl Hash for BitVec {
 
 #[cfg(test)]
 mod tests {
+    extern crate std;
+
     use super::*;
     use crate::bitvec;
     use std::hash::DefaultHasher;

@@ -18,9 +18,10 @@ macro_rules! bitvec {
         $crate::BitVec::new()
     };
 
-    [$elem:expr; $n:expr] => {
-        $crate::BitVec::from(::std::vec![$elem; $n])
-    };
+    [$elem:expr; $n:expr] => {{
+        extern crate alloc;
+        $crate::BitVec::from(alloc::vec![$elem; $n])
+    }};
 
     [$($elem:expr),+ $(,)?] => {
         $crate::BitVec::from([$($elem,)+])
@@ -30,6 +31,8 @@ macro_rules! bitvec {
 #[cfg(test)]
 mod tests {
     use crate::{BITS_PER_WORD, BYTES_PER_WORD};
+    use alloc::vec;
+    use alloc::vec::Vec;
 
     #[test]
     fn test_bitvec() {

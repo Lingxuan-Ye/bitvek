@@ -1,6 +1,6 @@
 use crate::BitVec;
-use std::iter::FusedIterator;
-use std::ops::Range;
+use core::iter::FusedIterator;
+use core::ops::Range;
 
 impl BitVec {
     /// Returns an iterator over the bits of the vector.

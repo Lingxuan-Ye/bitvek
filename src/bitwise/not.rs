@@ -1,5 +1,5 @@
 use crate::BitVec;
-use std::ops::Not;
+use core::ops::Not;
 
 impl Not for BitVec {
     type Output = BitVec;
