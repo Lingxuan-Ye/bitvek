@@ -1,4 +1,4 @@
-use super::BitVec;
+use crate::BitVec;
 
 impl std::fmt::Debug for BitVec {
     #[inline]

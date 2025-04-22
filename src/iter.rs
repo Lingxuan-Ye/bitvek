@@ -1,4 +1,4 @@
-use super::BitVec;
+use crate::BitVec;
 use std::iter::FusedIterator;
 use std::ops::Range;
 

@@ -1,4 +1,4 @@
-use super::BitVec;
+use crate::BitVec;
 
 impl std::ops::Index<usize> for BitVec {
     type Output = bool;

@@ -1,4 +1,4 @@
-use super::{BITS_PER_WORD, BitVec};
+use crate::{BITS_PER_WORD, BitVec};
 
 impl PartialEq for BitVec {
     fn eq(&self, other: &Self) -> bool {

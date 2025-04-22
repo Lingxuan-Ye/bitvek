@@ -1,4 +1,4 @@
-use super::BitVec;
+use crate::BitVec;
 use std::cmp::min;
 use std::iter::zip;
 

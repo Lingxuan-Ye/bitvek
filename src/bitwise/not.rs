@@ -1,4 +1,4 @@
-use super::BitVec;
+use crate::BitVec;
 use std::ops::Not;
 
 impl Not for BitVec {

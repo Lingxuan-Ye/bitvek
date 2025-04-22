@@ -1,4 +1,4 @@
-use super::BitVec;
+use crate::BitVec;
 
 impl Extend<bool> for BitVec {
     fn extend<I>(&mut self, iter: I)
