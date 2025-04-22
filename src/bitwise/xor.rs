@@ -1,5 +1,5 @@
-use super::BitVec;
-use std::ops::BitXor;
+use crate::BitVec;
+use core::ops::BitXor;
 
 impl BitXor for BitVec {
     type Output = BitVec;

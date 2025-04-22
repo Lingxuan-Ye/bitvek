@@ -1,5 +1,5 @@
-use super::BitVec;
-use std::ops::BitAnd;
+use crate::BitVec;
+use core::ops::BitAnd;
 
 impl BitAnd for BitVec {
     type Output = BitVec;

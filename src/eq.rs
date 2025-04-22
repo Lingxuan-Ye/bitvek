@@ -1,4 +1,4 @@
-use super::{BITS_PER_WORD, BitVec};
+use crate::{BITS_PER_WORD, BitVec};
 
 impl PartialEq for BitVec {
     fn eq(&self, other: &Self) -> bool {
@@ -27,32 +27,36 @@ mod tests {
 
     #[test]
     fn test_eq() {
-        let lhs = bitvec![true, false, true, false];
+        {
+            let lhs = bitvec![true, true, false, false];
 
-        let rhs = bitvec![true, false, true, false];
-        assert_eq!(lhs, rhs);
+            let rhs = bitvec![true, true, false, false];
+            assert_eq!(lhs, rhs);
 
-        let rhs = bitvec![true, true, false, false];
-        assert_ne!(lhs, rhs);
+            let rhs = bitvec![true, false, true, false];
+            assert_ne!(lhs, rhs);
 
-        let mut rhs = bitvec![true, false, true, false, true];
-        assert_ne!(lhs, rhs);
-        rhs.pop();
-        assert_ne!(lhs.data, rhs.data);
-        assert_eq!(lhs, rhs);
+            let mut rhs = bitvec![true, true, false, false, true];
+            assert_ne!(lhs, rhs);
+            rhs.pop();
+            assert_ne!(lhs.data, rhs.data);
+            assert_eq!(lhs, rhs);
+        }
 
-        let lhs = bitvec![true; BITS_PER_WORD + 1];
+        {
+            let lhs = bitvec![true; BITS_PER_WORD + 1];
 
-        let rhs = bitvec![true; BITS_PER_WORD + 1];
-        assert_eq!(lhs, rhs);
+            let rhs = bitvec![true; BITS_PER_WORD + 1];
+            assert_eq!(lhs, rhs);
 
-        let rhs = bitvec![false; BITS_PER_WORD + 1];
-        assert_ne!(lhs, rhs);
+            let rhs = bitvec![false; BITS_PER_WORD + 1];
+            assert_ne!(lhs, rhs);
 
-        let mut rhs = bitvec![true; BITS_PER_WORD + 2];
-        assert_ne!(lhs, rhs);
-        rhs.pop();
-        assert_ne!(lhs.data, rhs.data);
-        assert_eq!(lhs, rhs);
+            let mut rhs = bitvec![true; BITS_PER_WORD + 2];
+            assert_ne!(lhs, rhs);
+            rhs.pop();
+            assert_ne!(lhs.data, rhs.data);
+            assert_eq!(lhs, rhs);
+        }
     }
 }

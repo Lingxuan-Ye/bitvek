@@ -1,8 +1,9 @@
-use super::BitVec;
+use crate::BitVec;
+use core::fmt;
 
-impl std::fmt::Debug for BitVec {
+impl fmt::Debug for BitVec {
     #[inline]
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_list().entries(self.iter()).finish()
     }
 }

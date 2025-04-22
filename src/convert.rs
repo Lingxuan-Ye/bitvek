@@ -1,4 +1,5 @@
-use super::{BYTES_PER_WORD, BitVec};
+use crate::{BYTES_PER_WORD, BitVec};
+use alloc::vec::Vec;
 
 impl BitVec {
     /// Creates a new `BitVec` from the given bytes.
@@ -107,6 +108,7 @@ impl From<&BitVec> for Vec<bool> {
 mod tests {
     use super::*;
     use crate::BITS_PER_WORD;
+    use alloc::vec;
 
     #[test]
     fn test_from_bytes() {

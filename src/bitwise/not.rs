@@ -1,5 +1,5 @@
-use super::BitVec;
-use std::ops::Not;
+use crate::BitVec;
+use core::ops::Not;
 
 impl Not for BitVec {
     type Output = BitVec;
