@@ -39,6 +39,7 @@ mod convert;
 mod eq;
 mod extend;
 mod fmt;
+mod hash;
 mod index;
 mod iter;
 mod macros;
