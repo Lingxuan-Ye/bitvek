@@ -21,7 +21,7 @@ impl Extend<bool> for BitVec {
 #[cfg(test)]
 mod tests {
     use crate::bitvec;
-    use core::iter::repeat;
+    use core::iter::repeat_n;
 
     #[test]
     fn test_extend() {
@@ -34,6 +34,6 @@ mod tests {
     #[should_panic]
     fn test_extend_fail() {
         let mut vec = bitvec![true, false];
-        vec.extend(repeat(true).take(usize::MAX));
+        vec.extend(repeat_n(true, usize::MAX));
     }
 }
