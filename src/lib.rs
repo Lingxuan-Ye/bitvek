@@ -22,7 +22,7 @@
 //! ```
 //! # use bitvek::bitvec;
 //! #
-//! // requires the total number of bits to be a multiple of 8
+//! // The total number of bits must be a multiple of 8.
 //! let vec = bitvec![0b11110000, 0b00001111];
 //! ```
 //!
@@ -71,8 +71,10 @@ impl BitVec {
     /// let vec = BitVec::new();
     /// ```
     #[inline]
-    pub fn new() -> Self {
-        Default::default()
+    pub const fn new() -> Self {
+        let data = Vec::new();
+        let len = 0;
+        Self { data, len }
     }
 
     /// Creates a new, empty [`BitVec`] with the specified capacity.
