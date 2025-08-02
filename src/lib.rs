@@ -22,7 +22,7 @@
 //! ```
 //! # use bitvek::bitvec;
 //! #
-//! // requires the total number of bits to be a multiple of 8
+//! // The total number of bits must be a multiple of 8.
 //! let vec = bitvec![0b11110000, 0b00001111];
 //! ```
 //!
