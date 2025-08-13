@@ -10,8 +10,11 @@ impl BitVec {
     /// ```
     /// use bitvek::{bitvec, BitVec};
     ///
-    /// let vec = BitVec::from_bytes(&[0b11110000]);
-    /// assert_eq!(vec, bitvec![true, true, true, true, false, false, false, false]);
+    /// let vec = BitVec::from_bytes(&[0b11110000, 0b00001111]);
+    /// assert_eq!(vec, bitvec![
+    ///     true, true, true, true, false, false, false, false,
+    ///     false, false, false, false, true, true, true, true,
+    /// ]);
     /// ```
     pub fn from_bytes(bytes: &[u8]) -> Self {
         let len = bytes.len() * 8;

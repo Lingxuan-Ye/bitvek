@@ -79,9 +79,10 @@ impl BitVec {
 
     /// Creates a new, empty [`BitVec`] with the specified capacity.
     ///
+    /// # Notes
+    ///
     /// The actual capacity will be rounded up to the nearest multiple of
-    /// the machine word size in bits. This ensures efficient use of memory
-    /// by aligning with the underlying word boundaries.
+    /// the machine word size in bits.
     ///
     /// # Examples
     ///
@@ -259,16 +260,16 @@ impl BitVec {
     ///
     /// # Panics
     ///
-    /// Panics if the new capacity exceeds `usize::MAX` bits.
+    /// Panics if the required capacity exceeds `usize::MAX` bits.
     ///
     /// # Examples
     ///
     /// ```
     /// use bitvek::bitvec;
     ///
-    /// let mut vec = bitvec![true, true, false];
-    /// vec.push(false);
-    /// assert_eq!(vec, bitvec![true, true, false, false]);
+    /// let mut vec = bitvec![true, true, false, false];
+    /// vec.push(true);
+    /// assert_eq!(vec, bitvec![true, true, false, false, true]);
     /// ```
     pub fn push(&mut self, value: bool) -> &mut Self {
         if self.len == usize::MAX {
@@ -424,7 +425,7 @@ mod tests {
 
         // unable to cover (run out of memory)
         // let vec = BitVec {
-        //     data: Vec::with_capacity(isize::MAX as usize / BYTES_PER_WORD),
+        //     data: Vec::with_capacity(isize::MAX as usize),
         //     len: 0,
         // };
         // assert_eq!(vec.capacity(), usize::MAX);
