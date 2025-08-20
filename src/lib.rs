@@ -97,8 +97,8 @@ impl BitVec {
     #[inline]
     pub fn with_capacity(capacity: usize) -> Self {
         let len = 0;
-        let capacity = Self::words_required(capacity);
-        let data = Vec::with_capacity(capacity);
+        let words = Self::words_required(capacity);
+        let data = Vec::with_capacity(words);
         Self { len, data }
     }
 }
@@ -378,11 +378,11 @@ impl BitVec {
 }
 
 impl BitVec {
-    fn words_required(len: usize) -> usize {
-        if len == 0 {
+    fn words_required(bits: usize) -> usize {
+        if bits == 0 {
             0
         } else {
-            (len - 1) / BITS_PER_WORD + 1
+            (bits - 1) / BITS_PER_WORD + 1
         }
     }
 }

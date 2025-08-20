@@ -18,8 +18,8 @@ impl BitVec {
     /// ```
     pub fn from_bytes(bytes: &[u8]) -> Self {
         let len = bytes.len() * 8;
-        let capacity = Self::words_required(len);
-        let mut data = Vec::with_capacity(capacity);
+        let words = Self::words_required(len);
+        let mut data = Vec::with_capacity(words);
         let iter = bytes.chunks_exact(BYTES_PER_WORD);
         let remainder = iter.remainder();
         for chunk in iter {
