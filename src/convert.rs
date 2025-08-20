@@ -34,7 +34,7 @@ impl BitVec {
             }
             data.push(usize::from_be_bytes(last));
         }
-        Self { data, len }
+        Self { len, data }
     }
 }
 
@@ -173,37 +173,37 @@ mod tests {
     #[test]
     fn test_from_bytes() {
         let vec = BitVec::from_bytes(&[0b10101010]);
-        assert_eq!(vec.data, vec![0b10101010 << (BITS_PER_WORD - 8)]);
         assert_eq!(vec.len, 8);
+        assert_eq!(vec.data, vec![0b10101010 << (BITS_PER_WORD - 8)]);
 
         let vec = BitVec::from_bytes(&[0b11110000, 0b00001111]);
-        assert_eq!(vec.data, vec![0b11110000_00001111 << (BITS_PER_WORD - 16)]);
         assert_eq!(vec.len, 16);
+        assert_eq!(vec.data, vec![0b11110000_00001111 << (BITS_PER_WORD - 16)]);
 
         let vec = BitVec::from_bytes(&[0b11111111; BYTES_PER_WORD]);
-        assert_eq!(vec.data, vec![usize::MAX]);
         assert_eq!(vec.len, BITS_PER_WORD);
+        assert_eq!(vec.data, vec![usize::MAX]);
 
         let vec = BitVec::from_bytes(&[0b11111111; BYTES_PER_WORD + 1]);
+        assert_eq!(vec.len, BITS_PER_WORD + 8);
         assert_eq!(
             vec.data,
             vec![usize::MAX, 0b11111111 << (BITS_PER_WORD - 8)]
         );
-        assert_eq!(vec.len, BITS_PER_WORD + 8);
     }
 
     #[test]
     fn test_from_iter() {
         let vec = BitVec::from_iter([true, false, true, false]);
-        assert_eq!(vec.data, vec![0b1010 << (BITS_PER_WORD - 4)]);
         assert_eq!(vec.len, 4);
+        assert_eq!(vec.data, vec![0b1010 << (BITS_PER_WORD - 4)]);
 
         let vec = BitVec::from_iter([true; BITS_PER_WORD]);
-        assert_eq!(vec.data, vec![usize::MAX]);
         assert_eq!(vec.len, BITS_PER_WORD);
+        assert_eq!(vec.data, vec![usize::MAX]);
 
         let vec = BitVec::from_iter([true; BITS_PER_WORD + 1]);
-        assert_eq!(vec.data, vec![usize::MAX, 0b1 << (BITS_PER_WORD - 1)]);
         assert_eq!(vec.len, BITS_PER_WORD + 1);
+        assert_eq!(vec.data, vec![usize::MAX, 0b1 << (BITS_PER_WORD - 1)]);
     }
 }

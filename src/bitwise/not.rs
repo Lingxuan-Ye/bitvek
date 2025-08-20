@@ -6,9 +6,9 @@ impl Not for BitVec {
 
     #[inline]
     fn not(self) -> Self::Output {
-        let data = self.data.into_iter().map(|word| !word).collect();
         let len = self.len;
-        Self::Output { data, len }
+        let data = self.data.into_iter().map(|word| !word).collect();
+        Self::Output { len, data }
     }
 }
 
@@ -17,8 +17,8 @@ impl Not for &BitVec {
 
     #[inline]
     fn not(self) -> Self::Output {
-        let data = self.data.iter().map(|word| !word).collect();
         let len = self.len;
-        Self::Output { data, len }
+        let data = self.data.iter().map(|word| !word).collect();
+        Self::Output { len, data }
     }
 }
