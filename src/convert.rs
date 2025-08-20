@@ -119,6 +119,20 @@ impl From<&[bool]> for BitVec {
     }
 }
 
+impl From<BitVec> for Box<[bool]> {
+    #[inline]
+    fn from(value: BitVec) -> Self {
+        value.into_iter().collect()
+    }
+}
+
+impl From<&BitVec> for Box<[bool]> {
+    #[inline]
+    fn from(value: &BitVec) -> Self {
+        value.iter().collect()
+    }
+}
+
 impl From<BitVec> for Vec<bool> {
     #[inline]
     fn from(value: BitVec) -> Self {
