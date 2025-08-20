@@ -51,6 +51,9 @@ mod index;
 mod iter;
 mod macros;
 
+#[cfg(feature = "serde")]
+mod serde;
+
 const BITS_PER_BYTE: usize = u8::BITS as usize;
 const BITS_PER_WORD: usize = usize::BITS as usize;
 const BYTES_PER_WORD: usize = size_of::<usize>();
@@ -379,6 +382,14 @@ impl BitVec {
 }
 
 impl BitVec {
+    fn bytes_required(bits: usize) -> usize {
+        if bits == 0 {
+            0
+        } else {
+            (bits - 1) / BITS_PER_BYTE + 1
+        }
+    }
+
     fn words_required(bits: usize) -> usize {
         if bits == 0 {
             0
