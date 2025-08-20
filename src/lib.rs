@@ -51,6 +51,7 @@ mod index;
 mod iter;
 mod macros;
 
+const BITS_PER_BYTE: usize = u8::BITS as usize;
 const BITS_PER_WORD: usize = usize::BITS as usize;
 const BYTES_PER_WORD: usize = size_of::<usize>();
 

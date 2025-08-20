@@ -1,4 +1,4 @@
-use crate::{BYTES_PER_WORD, BitVec};
+use crate::{BITS_PER_BYTE, BYTES_PER_WORD, BitVec};
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 
@@ -17,7 +17,7 @@ impl BitVec {
     /// ]);
     /// ```
     pub fn from_bytes(bytes: &[u8]) -> Self {
-        let len = bytes.len() * 8;
+        let len = bytes.len() * BITS_PER_BYTE;
         let words = Self::words_required(len);
         let mut data = Vec::with_capacity(words);
         let iter = bytes.chunks_exact(BYTES_PER_WORD);
