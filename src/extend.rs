@@ -10,7 +10,7 @@ impl Extend<bool> for BitVec {
             .len
             .checked_add(iter.size_hint().0)
             .expect("capacity overflow");
-        let additional = Self::word_count(new_len_lower_limit) - self.data.len();
+        let additional = Self::words_required(new_len_lower_limit) - self.data.len();
         self.data.reserve(additional);
         for value in iter {
             self.push(value);

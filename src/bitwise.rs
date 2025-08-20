@@ -12,27 +12,27 @@ impl BitVec {
     where
         F: FnMut((&usize, &usize)) -> usize,
     {
-        let data = zip(&self.data, &rhs.data).map(op).collect();
         let len = min(self.len, rhs.len);
-        Self { data, len }
+        let data = zip(&self.data, &rhs.data).map(op).collect();
+        Self { len, data }
     }
 
     fn bitwise_operation_consume_self<F>(self, rhs: &Self, op: F) -> Self
     where
         F: FnMut((usize, &usize)) -> usize,
     {
-        let data = zip(self.data, &rhs.data).map(op).collect();
         let len = min(self.len, rhs.len);
-        Self { data, len }
+        let data = zip(self.data, &rhs.data).map(op).collect();
+        Self { len, data }
     }
 
     fn bitwise_operation_consume_both<F>(self, rhs: Self, op: F) -> Self
     where
         F: FnMut((usize, usize)) -> usize,
     {
-        let data = zip(self.data, rhs.data).map(op).collect();
         let len = min(self.len, rhs.len);
-        Self { data, len }
+        let data = zip(self.data, rhs.data).map(op).collect();
+        Self { len, data }
     }
 }
 

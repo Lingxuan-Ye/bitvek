@@ -1,6 +1,6 @@
 [package]
 name = "bitvek"
-version = "0.3.6"
+version = "0.3.7"
 edition = "2024"
 authors = ["Lingxuan Ye <love@lingxuan.io>"]
 categories = ["data-structures", "no-std"]
@@ -8,3 +8,16 @@ repository = "https://github.com/Lingxuan-Ye/bitvek"
 readme = "README.md"
 license = "MIT"
 description = "A simple bit vector implementation."
+
+[dependencies.serde]
+version = "1.0.219"
+default-features = false
+features = ["alloc"]
+optional = true
+
+[dev-dependencies]
+serde_test = "1.0.177"
+
+[features]
+default = ["serde"]
+serde = ["dep:serde"]

@@ -39,6 +39,7 @@ extern crate alloc;
 pub use self::iter::{IntoIter, Iter};
 
 use alloc::vec::Vec;
+use core::cmp::max;
 
 mod bitwise;
 mod convert;
@@ -50,14 +51,18 @@ mod index;
 mod iter;
 mod macros;
 
+#[cfg(feature = "serde")]
+mod serde;
+
+const BITS_PER_BYTE: usize = u8::BITS as usize;
 const BITS_PER_WORD: usize = usize::BITS as usize;
 const BYTES_PER_WORD: usize = size_of::<usize>();
 
 // As the name suggests, this is a bit vector.
 #[derive(Clone, Default)]
 pub struct BitVec {
-    data: Vec<usize>,
     len: usize,
+    data: Vec<usize>,
 }
 
 impl BitVec {
@@ -72,16 +77,17 @@ impl BitVec {
     /// ```
     #[inline]
     pub const fn new() -> Self {
-        let data = Vec::new();
         let len = 0;
-        Self { data, len }
+        let data = Vec::new();
+        Self { len, data }
     }
 
     /// Creates a new, empty [`BitVec`] with the specified capacity.
     ///
+    /// # Notes
+    ///
     /// The actual capacity will be rounded up to the nearest multiple of
-    /// the machine word size in bits. This ensures efficient use of memory
-    /// by aligning with the underlying word boundaries.
+    /// the machine word size in bits.
     ///
     /// # Examples
     ///
@@ -94,10 +100,10 @@ impl BitVec {
     /// ```
     #[inline]
     pub fn with_capacity(capacity: usize) -> Self {
-        let capacity = Self::word_count(capacity);
-        let data = Vec::with_capacity(capacity);
         let len = 0;
-        Self { data, len }
+        let words = Self::words_required(capacity);
+        let data = Vec::with_capacity(words);
+        Self { len, data }
     }
 }
 
@@ -259,16 +265,16 @@ impl BitVec {
     ///
     /// # Panics
     ///
-    /// Panics if the new capacity exceeds `usize::MAX` bits.
+    /// Panics if the required capacity exceeds `usize::MAX` bits.
     ///
     /// # Examples
     ///
     /// ```
     /// use bitvek::bitvec;
     ///
-    /// let mut vec = bitvec![true, true, false];
-    /// vec.push(false);
-    /// assert_eq!(vec, bitvec![true, true, false, false]);
+    /// let mut vec = bitvec![true, true, false, false];
+    /// vec.push(true);
+    /// assert_eq!(vec, bitvec![true, true, false, false, true]);
     /// ```
     pub fn push(&mut self, value: bool) -> &mut Self {
         if self.len == usize::MAX {
@@ -323,16 +329,21 @@ impl BitVec {
     /// # Examples
     ///
     /// ```
-    /// use bitvek::BitVec;
+    /// use bitvek::{BitVec, bitvec};
     ///
     /// let mut vec = BitVec::with_capacity(10);
     /// vec.extend([true, true, false, false]);
     /// assert!(vec.capacity() >= 10);
+    /// assert_eq!(vec, bitvec![true, true, false, false]);
+    ///
     /// vec.shrink_to_fit();
     /// assert!(vec.capacity() >= 4);
+    /// assert_eq!(vec, bitvec![true, true, false, false]);
     /// ```
     #[inline]
     pub fn shrink_to_fit(&mut self) -> &mut Self {
+        let min_words = Self::words_required(self.len);
+        self.data.truncate(min_words);
         self.data.shrink_to_fit();
         self
     }
@@ -345,26 +356,41 @@ impl BitVec {
     /// # Examples
     ///
     /// ```
-    /// use bitvek::BitVec;
+    /// use bitvek::{BitVec, bitvec};
     ///
     /// let mut vec = BitVec::with_capacity(10);
     /// vec.extend([true, true, false, false]);
     /// assert!(vec.capacity() >= 10);
+    /// assert_eq!(vec, bitvec![true, true, false, false]);
+    ///
     /// vec.shrink_to(8);
     /// assert!(vec.capacity() >= 8);
+    /// assert_eq!(vec, bitvec![true, true, false, false]);
+    ///
     /// vec.shrink_to(0);
     /// assert!(vec.capacity() >= 4);
+    /// assert_eq!(vec, bitvec![true, true, false, false]);
     /// ```
     #[inline]
     pub fn shrink_to(&mut self, min_capacity: usize) -> &mut Self {
-        let min_capacity = Self::word_count(min_capacity);
-        self.data.shrink_to(min_capacity);
+        let min_capacity = max(self.len, min_capacity);
+        let min_words = Self::words_required(min_capacity);
+        self.data.truncate(min_words);
+        self.data.shrink_to_fit();
         self
     }
 }
 
 impl BitVec {
-    fn word_count(bits: usize) -> usize {
+    fn bytes_required(bits: usize) -> usize {
+        if bits == 0 {
+            0
+        } else {
+            (bits - 1) / BITS_PER_BYTE + 1
+        }
+    }
+
+    fn words_required(bits: usize) -> usize {
         if bits == 0 {
             0
         } else {
@@ -381,31 +407,31 @@ mod tests {
     #[test]
     fn test_new() {
         let vec = BitVec::new();
-        assert_eq!(vec.data, Vec::new());
         assert_eq!(vec.len, 0);
+        assert_eq!(vec.data, Vec::new());
     }
 
     #[test]
     fn test_with_capacity() {
         let vec = BitVec::with_capacity(0);
+        assert_eq!(vec.len, 0);
         assert_eq!(vec.data.len(), 0);
         assert_eq!(vec.data.capacity(), 0);
-        assert_eq!(vec.len, 0);
 
         let vec = BitVec::with_capacity(1);
+        assert_eq!(vec.len, 0);
         assert_eq!(vec.data.len(), 0);
         assert_eq!(vec.data.capacity(), 1);
-        assert_eq!(vec.len, 0);
 
         let vec = BitVec::with_capacity(BITS_PER_WORD);
+        assert_eq!(vec.len, 0);
         assert_eq!(vec.data.len(), 0);
         assert_eq!(vec.data.capacity(), 1);
-        assert_eq!(vec.len, 0);
 
         let vec = BitVec::with_capacity(BITS_PER_WORD + 1);
+        assert_eq!(vec.len, 0);
         assert_eq!(vec.data.len(), 0);
         assert_eq!(vec.data.capacity(), 2);
-        assert_eq!(vec.len, 0);
     }
 
     #[test]
@@ -424,8 +450,8 @@ mod tests {
 
         // unable to cover (run out of memory)
         // let vec = BitVec {
-        //     data: Vec::with_capacity(isize::MAX as usize / BYTES_PER_WORD),
         //     len: 0,
+        //     data: Vec::with_capacity(isize::MAX as usize),
         // };
         // assert_eq!(vec.capacity(), usize::MAX);
     }
@@ -481,11 +507,11 @@ mod tests {
 
         let mut vec = bitvec![true; BITS_PER_WORD - 1];
         vec.push(true);
-        assert_eq!(vec.data, vec![usize::MAX]);
         assert_eq!(vec.len, BITS_PER_WORD);
+        assert_eq!(vec.data, vec![usize::MAX]);
         vec.push(false);
-        assert_eq!(vec.data, vec![usize::MAX, 0]);
         assert_eq!(vec.len, BITS_PER_WORD + 1);
+        assert_eq!(vec.data, vec![usize::MAX, 0]);
     }
 
     #[test]
@@ -509,7 +535,7 @@ mod tests {
 
         let mut vec = bitvec![true; BITS_PER_WORD + 1];
         while vec.pop().is_some() {}
-        assert_eq!(vec.data.len(), 0);
         assert_eq!(vec.len, 0);
+        assert_eq!(vec.data.len(), 0);
     }
 }
