@@ -1,4 +1,5 @@
 use crate::{BYTES_PER_WORD, BitVec};
+use alloc::boxed::Box;
 use alloc::vec::Vec;
 
 impl BitVec {
@@ -34,23 +35,23 @@ impl BitVec {
     }
 }
 
-impl FromIterator<bool> for BitVec {
-    fn from_iter<I>(iter: I) -> Self
-    where
-        I: IntoIterator<Item = bool>,
-    {
-        let iter = iter.into_iter();
-        let mut vec = BitVec::with_capacity(iter.size_hint().0);
-        for value in iter {
-            vec.push(value);
-        }
-        vec
-    }
-}
-
 impl<const N: usize> From<[u8; N]> for BitVec {
     #[inline]
     fn from(value: [u8; N]) -> Self {
+        Self::from_bytes(&value)
+    }
+}
+
+impl<const N: usize> From<Box<[u8; N]>> for BitVec {
+    #[inline]
+    fn from(value: Box<[u8; N]>) -> Self {
+        Self::from(value as Box<[u8]>)
+    }
+}
+
+impl From<Box<[u8]>> for BitVec {
+    #[inline]
+    fn from(value: Box<[u8]>) -> Self {
         Self::from_bytes(&value)
     }
 }
@@ -59,6 +60,13 @@ impl From<Vec<u8>> for BitVec {
     #[inline]
     fn from(value: Vec<u8>) -> Self {
         Self::from_bytes(&value)
+    }
+}
+
+impl<const N: usize> From<&[u8; N]> for BitVec {
+    #[inline]
+    fn from(value: &[u8; N]) -> Self {
+        Self::from_bytes(value)
     }
 }
 
@@ -76,10 +84,31 @@ impl<const N: usize> From<[bool; N]> for BitVec {
     }
 }
 
+impl<const N: usize> From<Box<[bool; N]>> for BitVec {
+    #[inline]
+    fn from(value: Box<[bool; N]>) -> Self {
+        Self::from(value as Box<[bool]>)
+    }
+}
+
+impl From<Box<[bool]>> for BitVec {
+    #[inline]
+    fn from(value: Box<[bool]>) -> Self {
+        value.into_iter().collect()
+    }
+}
+
 impl From<Vec<bool>> for BitVec {
     #[inline]
     fn from(value: Vec<bool>) -> Self {
         value.into_iter().collect()
+    }
+}
+
+impl<const N: usize> From<&[bool; N]> for BitVec {
+    #[inline]
+    fn from(value: &[bool; N]) -> Self {
+        Self::from(&value[..])
     }
 }
 
@@ -101,6 +130,20 @@ impl From<&BitVec> for Vec<bool> {
     #[inline]
     fn from(value: &BitVec) -> Self {
         value.iter().collect()
+    }
+}
+
+impl FromIterator<bool> for BitVec {
+    fn from_iter<I>(iter: I) -> Self
+    where
+        I: IntoIterator<Item = bool>,
+    {
+        let iter = iter.into_iter();
+        let mut vec = BitVec::with_capacity(iter.size_hint().0);
+        for value in iter {
+            vec.push(value);
+        }
+        vec
     }
 }
 
