@@ -94,7 +94,7 @@ impl BitVec {
     /// ```
     #[inline]
     pub fn with_capacity(capacity: usize) -> Self {
-        let capacity = Self::word_count(capacity);
+        let capacity = Self::words_required(capacity);
         let data = Vec::with_capacity(capacity);
         let len = 0;
         Self { data, len }
@@ -357,18 +357,18 @@ impl BitVec {
     /// ```
     #[inline]
     pub fn shrink_to(&mut self, min_capacity: usize) -> &mut Self {
-        let min_capacity = Self::word_count(min_capacity);
+        let min_capacity = Self::words_required(min_capacity);
         self.data.shrink_to(min_capacity);
         self
     }
 }
 
 impl BitVec {
-    fn word_count(bits: usize) -> usize {
-        if bits == 0 {
+    fn words_required(len: usize) -> usize {
+        if len == 0 {
             0
         } else {
-            (bits - 1) / BITS_PER_WORD + 1
+            (len - 1) / BITS_PER_WORD + 1
         }
     }
 }
