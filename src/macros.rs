@@ -19,8 +19,7 @@ macro_rules! bitvec {
     };
 
     [$elem:expr; $n:expr] => {{
-        extern crate alloc;
-        $crate::BitVec::from(alloc::vec![$elem; $n])
+        $crate::BitVec::from([$elem; $n])
     }};
 
     [$($elem:expr),+ $(,)?] => {
