@@ -39,6 +39,7 @@ extern crate alloc;
 pub use self::iter::{IntoIter, Iter};
 
 use alloc::vec::Vec;
+use core::cmp::max;
 
 mod bitwise;
 mod convert;
@@ -324,16 +325,21 @@ impl BitVec {
     /// # Examples
     ///
     /// ```
-    /// use bitvek::BitVec;
+    /// use bitvek::{BitVec, bitvec};
     ///
     /// let mut vec = BitVec::with_capacity(10);
     /// vec.extend([true, true, false, false]);
     /// assert!(vec.capacity() >= 10);
+    /// assert_eq!(vec, bitvec![true, true, false, false]);
+    ///
     /// vec.shrink_to_fit();
     /// assert!(vec.capacity() >= 4);
+    /// assert_eq!(vec, bitvec![true, true, false, false]);
     /// ```
     #[inline]
     pub fn shrink_to_fit(&mut self) -> &mut Self {
+        let min_words = Self::words_required(self.len);
+        self.data.truncate(min_words);
         self.data.shrink_to_fit();
         self
     }
@@ -346,20 +352,27 @@ impl BitVec {
     /// # Examples
     ///
     /// ```
-    /// use bitvek::BitVec;
+    /// use bitvek::{BitVec, bitvec};
     ///
     /// let mut vec = BitVec::with_capacity(10);
     /// vec.extend([true, true, false, false]);
     /// assert!(vec.capacity() >= 10);
+    /// assert_eq!(vec, bitvec![true, true, false, false]);
+    ///
     /// vec.shrink_to(8);
     /// assert!(vec.capacity() >= 8);
+    /// assert_eq!(vec, bitvec![true, true, false, false]);
+    ///
     /// vec.shrink_to(0);
     /// assert!(vec.capacity() >= 4);
+    /// assert_eq!(vec, bitvec![true, true, false, false]);
     /// ```
     #[inline]
     pub fn shrink_to(&mut self, min_capacity: usize) -> &mut Self {
-        let min_capacity = Self::words_required(min_capacity);
-        self.data.shrink_to(min_capacity);
+        let min_capacity = max(self.len, min_capacity);
+        let min_words = Self::words_required(min_capacity);
+        self.data.truncate(min_words);
+        self.data.shrink_to_fit();
         self
     }
 }
