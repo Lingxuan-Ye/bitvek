@@ -16,11 +16,12 @@ impl Serialize for BitVec {
         let (div, rem) = (bytes / BYTES_PER_WORD, bytes % BYTES_PER_WORD);
         let mut data = Vec::with_capacity(bytes);
         for i in 0..div {
-            let word = unsafe { self.data.get_unchecked(i) };
-            data.extend(word.to_be_bytes());
+            let word = unsafe { self.data.get_unchecked(i).to_be_bytes() };
+            data.extend(word);
         }
-        let word = unsafe { self.data.get_unchecked(div) };
-        data.extend_from_slice(&word.to_be_bytes()[..rem]);
+        let word = unsafe { self.data.get_unchecked(div).to_be_bytes() };
+        let slice = unsafe { word.get_unchecked(..rem) };
+        data.extend_from_slice(slice);
 
         let mut vec = serializer.serialize_struct("BitVec", 2)?;
         vec.serialize_field("len", &self.len)?;
