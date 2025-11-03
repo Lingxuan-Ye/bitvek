@@ -10,7 +10,7 @@ license = "MIT"
 description = "A simple bit vector implementation."
 
 [dependencies.serde]
-version = "1.0.219"
+version = "1.0.228"
 default-features = false
 features = ["alloc"]
 optional = true
