@@ -58,7 +58,7 @@ const BITS_PER_BYTE: usize = u8::BITS as usize;
 const BITS_PER_WORD: usize = usize::BITS as usize;
 const BYTES_PER_WORD: usize = size_of::<usize>();
 
-// As the name suggests, this is a bit vector.
+/// As the name suggests, this is a bit vector.
 #[derive(Clone, Default)]
 pub struct BitVec {
     len: usize,
@@ -108,8 +108,7 @@ impl BitVec {
 }
 
 impl BitVec {
-    /// Returns the total number of bits the vector can hold
-    /// without reallocating.
+    /// Returns the total number of bits the vector can hold without reallocating.
     ///
     /// # Examples
     ///
@@ -180,8 +179,8 @@ impl BitVec {
         }
     }
 
-    /// Returns the bit at the specified index, without performing any
-    /// bounds checking.
+    /// Returns the bit at the specified index, without performing any bounds
+    /// checking.
     ///
     /// # Safety
     ///
@@ -193,7 +192,7 @@ impl BitVec {
     /// use bitvek::bitvec;
     ///
     /// let vec = bitvec![true, true, false, false];
-    /// unsafe { assert_eq!(vec.get_unchecked(3), false) };
+    /// assert_eq!(unsafe { vec.get_unchecked(3) }, false);
     /// ```
     ///
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
@@ -204,8 +203,7 @@ impl BitVec {
         word & mask != 0
     }
 
-    /// Sets the bit at the specified index to the specified value,
-    /// if in bounds.
+    /// Sets the bit at the specified index to the specified value, if in bounds.
     ///
     /// # Examples
     ///
@@ -228,8 +226,8 @@ impl BitVec {
         }
     }
 
-    /// Sets the bit at the specified index to the specified value,
-    /// without performing any bounds checking.
+    /// Sets the bit at the specified index to the specified value, without
+    /// performing any bounds checking.
     ///
     /// # Safety
     ///
@@ -280,7 +278,7 @@ impl BitVec {
         if self.len == usize::MAX {
             panic!("capacity overflow")
         }
-        if self.len % BITS_PER_WORD != 0 {
+        if !self.len.is_multiple_of(BITS_PER_WORD) {
             // `self.len` as an index is out of bounds and directly
             // violates the safety contract of `Self::set_unchecked`.
             // However, this code is safe due to a full understanding
@@ -297,8 +295,8 @@ impl BitVec {
         self
     }
 
-    /// Removes the last bit from the vector and returns it, or `None` if
-    /// the vector is empty.
+    /// Removes the last bit from the vector and returns it, or `None` if the vector
+    /// is empty.
     ///
     /// # Examples
     ///
@@ -315,9 +313,10 @@ impl BitVec {
         }
         let last = self.len - 1;
         let value = unsafe { self.get_unchecked(last) };
-        if last % BITS_PER_WORD == 0 {
+        if last.is_multiple_of(BITS_PER_WORD) {
+            let new_len = self.data.len() - 1;
             unsafe {
-                self.data.set_len(self.data.len() - 1);
+                self.data.set_len(new_len);
             }
         }
         self.len = last;
@@ -350,8 +349,7 @@ impl BitVec {
 
     /// Shrinks the capacity of the vector with a lower bound.
     ///
-    /// If the current capacity is less than the lower limit,
-    /// this is a no-op.
+    /// If the current capacity is less than the lower limit, this is a no-op.
     ///
     /// # Examples
     ///
