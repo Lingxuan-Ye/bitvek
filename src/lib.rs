@@ -5,6 +5,7 @@ extern crate alloc;
 use alloc::boxed::Box;
 use core::ptr;
 
+mod eq;
 mod index;
 
 pub type Bit = bool;

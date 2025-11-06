@@ -49,30 +49,30 @@ impl Index<usize> for BitVec {
 }
 
 #[derive(Debug)]
-struct Loc {
-    word_index: usize,
-    bit_offset: usize,
+pub(crate) struct Loc {
+    pub(crate) word_index: usize,
+    pub(crate) bit_offset: usize,
 }
 
 impl Loc {
-    fn new(index: usize) -> Self {
+    pub(crate) fn new(index: usize) -> Self {
         Self {
             word_index: index / BITS_PER_WORD,
             bit_offset: index % BITS_PER_WORD,
         }
     }
 
-    fn mask(&self) -> Word {
+    pub(crate) fn mask(&self) -> Word {
         1 << (BITS_PER_WORD - 1 - self.bit_offset)
     }
 
-    unsafe fn get_unchecked(self, buf: &[Word]) -> Bit {
+    pub(crate) unsafe fn get_unchecked(self, buf: &[Word]) -> Bit {
         let word = unsafe { buf.get_unchecked(self.word_index) };
         let mask = self.mask();
         word & mask != 0
     }
 
-    unsafe fn set_unchecked(self, buf: &mut [Word], value: Bit) {
+    pub(crate) unsafe fn set_unchecked(self, buf: &mut [Word], value: Bit) {
         let word = unsafe { buf.get_unchecked_mut(self.word_index) };
         let mask = self.mask();
         if value {
