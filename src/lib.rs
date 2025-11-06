@@ -5,9 +5,13 @@ extern crate alloc;
 use alloc::boxed::Box;
 use core::ptr;
 
+mod index;
+
 pub type Bit = bool;
 
 type Word = usize;
+
+const BITS_PER_WORD: usize = Word::BITS as usize;
 
 #[derive(Debug, Default)]
 pub struct BitVec {
@@ -18,7 +22,7 @@ pub struct BitVec {
 impl BitVec {
     #[inline]
     pub fn capacity(&self) -> usize {
-        self.buf.len().saturating_mul(Word::BITS as usize)
+        self.buf.len().saturating_mul(BITS_PER_WORD)
     }
 
     #[inline]
@@ -44,6 +48,25 @@ impl BitVec {
         let buf = Self::allocate(words);
         let len = 0;
         Self { buf, len }
+    }
+}
+
+impl BitVec {
+    pub fn push(&mut self, value: Bit) -> &mut Self {
+        self.reserve(1);
+        unsafe {
+            self.set_unchecked(self.len, value);
+        }
+        self.len += 1;
+        self
+    }
+
+    pub fn pop(&mut self) -> Option<Bit> {
+        if self.is_empty() {
+            return None;
+        }
+        self.len -= 1;
+        Some(unsafe { self.get_unchecked(self.len) })
     }
 }
 
@@ -115,7 +138,7 @@ impl BitVec {
         if bits == 0 {
             0
         } else {
-            (bits - 1) / Word::BITS as usize + 1
+            (bits - 1) / BITS_PER_WORD + 1
         }
     }
 }
