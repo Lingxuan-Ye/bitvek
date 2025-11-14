@@ -12,7 +12,7 @@ impl BitVec {
     {
         let len = self.len.min(rhs.len);
         let words = Self::words_needed(len);
-        let buf = self.buf.iter().zip(&rhs.buf).take(words).map(op).collect();
+        let buf = self.buf.iter().zip(&*rhs.buf).take(words).map(op).collect();
         Self { len, buf }
     }
 
@@ -25,7 +25,7 @@ impl BitVec {
         let buf = self
             .buf
             .into_iter()
-            .zip(&rhs.buf)
+            .zip(&*rhs.buf)
             .take(words)
             .map(op)
             .collect();

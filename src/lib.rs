@@ -2,12 +2,12 @@
 
 extern crate alloc;
 
-use alloc::boxed::Box;
-use core::ptr;
+use self::buffer::Buffer;
 
 mod bitwise;
-mod hash;
+mod buffer;
 mod eq;
+mod hash;
 mod index;
 
 pub type Bit = bool;
@@ -18,8 +18,8 @@ const BITS_PER_WORD: usize = Word::BITS as usize;
 
 #[derive(Debug, Default)]
 pub struct BitVec {
-    buf: Box<[Word]>,
     len: usize,
+    buf: Buffer,
 }
 
 impl BitVec {
@@ -47,10 +47,10 @@ impl BitVec {
 
     #[inline]
     pub fn with_capacity(capacity: usize) -> Self {
-        let words = Self::words_needed(capacity);
-        let buf = Self::allocate(words);
         let len = 0;
-        Self { buf, len }
+        let words = Self::words_needed(capacity);
+        let buf = Buffer::allocate(words);
+        Self { len, buf }
     }
 }
 
@@ -80,11 +80,15 @@ impl BitVec {
             panic!("capacity overflow");
         };
         let words = Self::words_needed(capacity);
-        if words <= self.buf.len() {
-            return self;
+        if words > self.buf.len() {
+            let words = self.buf.len().saturating_mul(2).max(words).max(4);
+            let mut buf = Buffer::allocate(words);
+            unsafe {
+                buf.copy_from(&self.buf, self.words_used());
+            }
+            self.buf = buf;
         }
-        let words = self.buf.len().saturating_mul(2).max(words).max(4);
-        unsafe { self.reallocate(words) }
+        self
     }
 
     pub fn reserve_exact(&mut self, additional: usize) -> &mut Self {
@@ -92,47 +96,43 @@ impl BitVec {
             panic!("capacity overflow");
         };
         let words = Self::words_needed(capacity);
-        if words <= self.buf.len() {
-            return self;
+        if words > self.buf.len() {
+            let mut buf = Buffer::allocate(words);
+            unsafe {
+                buf.copy_from(&self.buf, self.words_used());
+            }
+            self.buf = buf;
         }
-        unsafe { self.reallocate(words) }
+        self
     }
 
     pub fn shrink_to_fit(&mut self) -> &mut Self {
-        let words = Self::words_needed(self.len);
-        if words == self.buf.len() {
-            return self;
+        let words = self.words_used();
+        if words < self.buf.len() {
+            let mut buf = Buffer::allocate(words);
+            unsafe {
+                buf.copy_from(&self.buf, words);
+            }
+            self.buf = buf;
         }
-        unsafe { self.reallocate(words) }
+        self
     }
 
     pub fn shrink_to(&mut self, capacity: usize) -> &mut Self {
         let capacity = self.len.max(capacity);
         let words = Self::words_needed(capacity);
-        if words >= self.buf.len() {
-            return self;
+        if words < self.buf.len() {
+            let mut buf = Buffer::allocate(words);
+            let count = if self.len == capacity {
+                words
+            } else {
+                self.words_used()
+            };
+            unsafe {
+                buf.copy_from(&self.buf, count);
+            }
+            self.buf = buf;
         }
-        unsafe { self.reallocate(words) }
-    }
-
-    fn allocate(words: usize) -> Box<[Word]> {
-        // SAFETY: `Word` has no invalid bit patterns and does not need to drop,
-        // so it is safe to assume uninitialized memory as initialized.
-        unsafe { Box::new_uninit_slice(words).assume_init() }
-    }
-
-    /// # Safety
-    ///
-    /// Caller must ensure that `Self::words_needed(self.len) <= words`.
-    unsafe fn reallocate(&mut self, words: usize) -> &mut Self {
-        let mut buf = Self::allocate(words);
-        let src = self.buf.as_ptr();
-        let dst = buf.as_mut_ptr();
-        let count = Self::words_needed(self.len);
-        unsafe {
-            ptr::copy_nonoverlapping(src, dst, count);
-        }
-        self.buf = buf;
         self
     }
 }
@@ -144,5 +144,9 @@ impl BitVec {
         } else {
             (bits - 1) / BITS_PER_WORD + 1
         }
+    }
+
+    fn words_used(&self) -> usize {
+        Self::words_needed(self.len)
     }
 }

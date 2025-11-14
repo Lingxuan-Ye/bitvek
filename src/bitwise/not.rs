@@ -6,7 +6,7 @@ impl Not for BitVec {
 
     #[inline]
     fn not(mut self) -> Self::Output {
-        let words = Self::words_needed(self.len);
+        let words = self.words_used();
         self.buf
             .iter_mut()
             .take(words)
