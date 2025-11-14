@@ -10,6 +10,7 @@ mod clone;
 mod eq;
 mod hash;
 mod index;
+mod iter;
 
 pub type Bit = bool;
 
