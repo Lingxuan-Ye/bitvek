@@ -6,6 +6,7 @@ use self::buffer::Buffer;
 
 mod bitwise;
 mod buffer;
+mod clone;
 mod eq;
 mod hash;
 mod index;
