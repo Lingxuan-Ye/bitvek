@@ -6,9 +6,10 @@ use core::mem::MaybeUninit;
 
 impl BitVec {
     pub fn from_bytes(bytes: &[Byte]) -> Self {
-        let Some(len) = bytes.len().checked_mul(BITS_PER_BYTE) else {
-            panic!("capacity overflow");
-        };
+        let len = bytes
+            .len()
+            .checked_mul(BITS_PER_BYTE)
+            .expect("capacity overflow");
         let words = Self::words_needed(len);
         let mut buf = Buffer::allocate(words);
 

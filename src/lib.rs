@@ -84,9 +84,7 @@ impl BitVec {
 
 impl BitVec {
     pub fn reserve(&mut self, additional: usize) -> &mut Self {
-        let Some(capacity) = self.len.checked_add(additional) else {
-            panic!("capacity overflow");
-        };
+        let capacity = self.len.checked_add(additional).expect("capacity overflow");
         let words = Self::words_needed(capacity);
         if words > self.buf.len() {
             let words = self.buf.len().saturating_mul(2).max(words).max(4);
@@ -100,9 +98,7 @@ impl BitVec {
     }
 
     pub fn reserve_exact(&mut self, additional: usize) -> &mut Self {
-        let Some(capacity) = self.len.checked_add(additional) else {
-            panic!("capacity overflow");
-        };
+        let capacity = self.len.checked_add(additional).expect("capacity overflow");
         let words = Self::words_needed(capacity);
         if words > self.buf.len() {
             let mut buf = Buffer::allocate(words);
