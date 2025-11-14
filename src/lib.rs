@@ -121,7 +121,7 @@ impl BitVec {
 
     /// # Safety
     ///
-    /// Caller must ensure that `self.words_used() <= words`.
+    /// Caller must ensure that `Self::words_needed(self.len) <= words`.
     unsafe fn reallocate(&mut self, words: usize) -> &mut Self {
         let mut buf = Self::allocate(words);
         let src = self.buf.as_ptr();
