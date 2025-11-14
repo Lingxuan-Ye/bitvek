@@ -9,6 +9,7 @@ mod buffer;
 mod clone;
 mod convert;
 mod eq;
+mod extend;
 mod fmt;
 mod hash;
 mod index;
