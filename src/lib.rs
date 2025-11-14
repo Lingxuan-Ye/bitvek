@@ -64,10 +64,11 @@ impl BitVec {
 
     pub fn pop(&mut self) -> Option<Bit> {
         if self.is_empty() {
-            return None;
+            None
+        } else {
+            self.len -= 1;
+            Some(unsafe { self.get_unchecked(self.len) })
         }
-        self.len -= 1;
-        Some(unsafe { self.get_unchecked(self.len) })
     }
 }
 
