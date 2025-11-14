@@ -50,20 +50,20 @@ impl Index<usize> for BitVec {
 
 #[derive(Debug)]
 pub(crate) struct Loc {
-    pub(crate) word_index: usize,
-    pub(crate) bit_offset: usize,
+    pub(crate) period: usize,
+    pub(crate) offset: usize,
 }
 
 impl Loc {
     pub(crate) fn new(index: usize) -> Self {
         Self {
-            word_index: index / BITS_PER_WORD,
-            bit_offset: index % BITS_PER_WORD,
+            period: index / BITS_PER_WORD,
+            offset: index % BITS_PER_WORD,
         }
     }
 
     pub(crate) fn complement(&self) -> usize {
-        BITS_PER_WORD - 1 - self.bit_offset
+        BITS_PER_WORD - 1 - self.offset
     }
 
     pub(crate) fn mask(&self) -> Word {
@@ -71,13 +71,13 @@ impl Loc {
     }
 
     pub(crate) unsafe fn get_unchecked(self, buf: &[Word]) -> Bit {
-        let word = unsafe { buf.get_unchecked(self.word_index) };
+        let word = unsafe { buf.get_unchecked(self.period) };
         let mask = self.mask();
         word & mask != 0
     }
 
     pub(crate) unsafe fn set_unchecked(self, buf: &mut [Word], value: Bit) {
-        let word = unsafe { buf.get_unchecked_mut(self.word_index) };
+        let word = unsafe { buf.get_unchecked_mut(self.period) };
         let mask = self.mask();
         if value {
             *word |= mask;

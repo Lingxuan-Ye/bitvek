@@ -1,5 +1,5 @@
+use crate::BitVec;
 use crate::index::Loc;
-use crate::{BITS_PER_WORD, BitVec};
 
 impl PartialEq for BitVec {
     fn eq(&self, other: &Self) -> bool {
@@ -14,15 +14,15 @@ impl PartialEq for BitVec {
         let last = self.len - 1;
         let loc = Loc::new(last);
 
-        let lhs = unsafe { self.buf.get_unchecked(..loc.word_index) };
-        let rhs = unsafe { other.buf.get_unchecked(..loc.word_index) };
-        if lhs != rhs {
+        let lhs_head = unsafe { self.buf.get_unchecked(..loc.period) };
+        let rhs_head = unsafe { other.buf.get_unchecked(..loc.period) };
+        if lhs_head != rhs_head {
             return false;
         }
 
-        let lhs = unsafe { self.buf.get_unchecked(loc.word_index) };
-        let rhs = unsafe { other.buf.get_unchecked(loc.word_index) };
-        (lhs ^ rhs) >> loc.complement() == 0
+        let lhs_tail = unsafe { self.buf.get_unchecked(loc.period) };
+        let rhs_tail = unsafe { other.buf.get_unchecked(loc.period) };
+        (lhs_tail ^ rhs_tail) >> loc.complement() == 0
     }
 }
 
