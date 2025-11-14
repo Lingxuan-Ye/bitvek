@@ -62,8 +62,12 @@ impl Loc {
         }
     }
 
+    pub(crate) fn complement(&self) -> usize {
+        BITS_PER_WORD - 1 - self.bit_offset
+    }
+
     pub(crate) fn mask(&self) -> Word {
-        1 << (BITS_PER_WORD - 1 - self.bit_offset)
+        1 << self.complement()
     }
 
     pub(crate) unsafe fn get_unchecked(self, buf: &[Word]) -> Bit {

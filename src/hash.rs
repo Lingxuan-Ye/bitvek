@@ -18,7 +18,7 @@ impl Hash for BitVec {
         head.hash(state);
 
         let tail = unsafe { self.buf.get_unchecked(loc.word_index) };
-        let unused = BITS_PER_WORD - 1 - loc.bit_offset;
+        let unused = loc.complement();
         (tail >> unused).hash(state);
 
         unused.hash(state);

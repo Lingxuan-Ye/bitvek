@@ -22,7 +22,7 @@ impl PartialEq for BitVec {
 
         let lhs = unsafe { self.buf.get_unchecked(loc.word_index) };
         let rhs = unsafe { other.buf.get_unchecked(loc.word_index) };
-        (lhs ^ rhs) >> (BITS_PER_WORD - 1 - loc.bit_offset) == 0
+        (lhs ^ rhs) >> loc.complement() == 0
     }
 }
 
