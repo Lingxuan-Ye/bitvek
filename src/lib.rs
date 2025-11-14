@@ -6,6 +6,7 @@ use alloc::boxed::Box;
 use core::ptr;
 
 mod bitwise;
+mod hash;
 mod eq;
 mod index;
 
