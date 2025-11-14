@@ -5,6 +5,7 @@ extern crate alloc;
 use alloc::boxed::Box;
 use core::ptr;
 
+mod bitwise;
 mod eq;
 mod index;
 
