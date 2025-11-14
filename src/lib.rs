@@ -9,6 +9,7 @@ mod buffer;
 mod clone;
 mod convert;
 mod eq;
+mod fmt;
 mod hash;
 mod index;
 mod iter;
@@ -21,7 +22,7 @@ const BITS_PER_BYTE: usize = Byte::BITS as usize;
 const BITS_PER_WORD: usize = Word::BITS as usize;
 const BYTES_PER_WORD: usize = size_of::<usize>();
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct BitVec {
     len: usize,
     buf: Buffer,
