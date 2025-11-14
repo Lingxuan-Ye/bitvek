@@ -13,6 +13,7 @@ mod fmt;
 mod hash;
 mod index;
 mod iter;
+mod macros;
 
 pub type Bit = bool;
 type Byte = u8;
