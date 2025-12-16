@@ -16,6 +16,9 @@ mod iter;
 mod macros;
 mod primitive;
 
+#[cfg(feature = "serde")]
+mod serde;
+
 #[derive(Default)]
 pub struct BitVec {
     // Invariant: `self.buf_used() <= self.buf.len()`

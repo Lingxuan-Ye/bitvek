@@ -33,6 +33,7 @@ impl Word {
         Self(usize::from_be_bytes(value))
     }
 
+    #[cfg(feature = "serde")]
     pub(crate) fn to_byte_array(self) -> [Byte; Word::BYTES] {
         self.0.to_be_bytes()
     }
