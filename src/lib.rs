@@ -194,9 +194,7 @@ impl Clone for BitVec {
 impl fmt::Debug for BitVec {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_list()
-            .entries(self.iter().map(|value| value as u8))
-            .finish()
+        f.debug_list().entries(self.iter()).finish()
     }
 }
 
