@@ -74,15 +74,6 @@ impl BitVec {
         self
     }
 
-    pub fn reserve_exact(&mut self, additional: usize) -> &mut Self {
-        let capacity = self.len.checked_add(additional).expect("capacity overflow");
-        let buf_capacity = capacity.div_ceil(Word::BITS);
-        if let Some(buf_additional) = buf_capacity.checked_sub(self.buf.len()) {
-            self.buf.reserve_exact(buf_additional);
-        };
-        self
-    }
-
     pub fn shrink_to_fit(&mut self) -> &mut Self {
         let buf_new_len = self.buf_used();
         unsafe {
