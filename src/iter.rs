@@ -4,6 +4,23 @@ use core::iter::FusedIterator;
 use core::ops::Range;
 
 impl BitVec {
+    /// Returns an iterator over the bits of the vector.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bitvek::bitvec;
+    ///
+    /// let vec = bitvec![true, true, false, false];
+    /// let mut iter = vec.iter();
+    ///
+    /// assert_eq!(iter.next(), Some(true));
+    /// assert_eq!(iter.next_back(), Some(false));
+    /// assert_eq!(iter.next(), Some(true));
+    /// assert_eq!(iter.next_back(), Some(false));
+    /// assert_eq!(iter.next(), None);
+    /// assert_eq!(iter.next_back(), None);
+    /// ```
     #[inline]
     pub fn iter(&self) -> Iter<'_> {
         let vec = self;
