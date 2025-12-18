@@ -1,4 +1,5 @@
 use crate::BitVec;
+use crate::primitive::Bit;
 use core::iter::FusedIterator;
 use core::ops::Range;
 
@@ -14,8 +15,8 @@ impl BitVec {
     /// let mut iter = vec.iter();
     ///
     /// assert_eq!(iter.next(), Some(true));
-    /// assert_eq!(iter.next(), Some(true));
     /// assert_eq!(iter.next_back(), Some(false));
+    /// assert_eq!(iter.next(), Some(true));
     /// assert_eq!(iter.next_back(), Some(false));
     /// assert_eq!(iter.next(), None);
     /// assert_eq!(iter.next_back(), None);
@@ -29,7 +30,7 @@ impl BitVec {
 }
 
 impl IntoIterator for BitVec {
-    type Item = bool;
+    type Item = Bit;
     type IntoIter = IntoIter;
 
     #[inline]
@@ -40,7 +41,6 @@ impl IntoIterator for BitVec {
     }
 }
 
-/// An iterator over the bits of a vector.
 #[derive(Clone, Debug)]
 pub struct Iter<'a> {
     vec: &'a BitVec,
@@ -48,12 +48,12 @@ pub struct Iter<'a> {
 }
 
 impl Iterator for Iter<'_> {
-    type Item = bool;
+    type Item = Bit;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         let index = self.range.next()?;
-        unsafe { Some(self.vec.get_unchecked(index)) }
+        Some(unsafe { self.vec.get_unchecked(index) })
     }
 
     #[inline]
@@ -66,14 +66,13 @@ impl DoubleEndedIterator for Iter<'_> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         let index = self.range.next_back()?;
-        unsafe { Some(self.vec.get_unchecked(index)) }
+        Some(unsafe { self.vec.get_unchecked(index) })
     }
 }
 
 impl ExactSizeIterator for Iter<'_> {}
 impl FusedIterator for Iter<'_> {}
 
-/// An owning iterator over the bits of a vector.
 #[derive(Clone, Debug)]
 pub struct IntoIter {
     vec: BitVec,
@@ -81,12 +80,12 @@ pub struct IntoIter {
 }
 
 impl Iterator for IntoIter {
-    type Item = bool;
+    type Item = Bit;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         let index = self.range.next()?;
-        unsafe { Some(self.vec.get_unchecked(index)) }
+        Some(unsafe { self.vec.get_unchecked(index) })
     }
 
     #[inline]
@@ -99,7 +98,7 @@ impl DoubleEndedIterator for IntoIter {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         let index = self.range.next_back()?;
-        unsafe { Some(self.vec.get_unchecked(index)) }
+        Some(unsafe { self.vec.get_unchecked(index) })
     }
 }
 
@@ -112,27 +111,55 @@ mod tests {
 
     #[test]
     fn test_iter() {
-        let vec = bitvec![true, false, true, false];
+        let vec = bitvec![true, true, false, false];
+        let unchanged = vec.clone();
+
         let mut iter = vec.iter();
         assert_eq!(iter.len(), 4);
         assert_eq!(iter.next(), Some(true));
-        assert_eq!(iter.next(), Some(false));
         assert_eq!(iter.next_back(), Some(false));
-        assert_eq!(iter.next_back(), Some(true));
-        assert_eq!(iter.next_back(), None);
+        assert_eq!(iter.next(), Some(true));
+        assert_eq!(iter.next_back(), Some(false));
         assert_eq!(iter.next(), None);
+        assert_eq!(iter.next_back(), None);
+
+        let mut vec = unchanged;
+        vec.push_unused_word();
+
+        let mut iter = vec.iter();
+        assert_eq!(iter.len(), 4);
+        assert_eq!(iter.next(), Some(true));
+        assert_eq!(iter.next_back(), Some(false));
+        assert_eq!(iter.next(), Some(true));
+        assert_eq!(iter.next_back(), Some(false));
+        assert_eq!(iter.next(), None);
+        assert_eq!(iter.next_back(), None);
     }
 
     #[test]
     fn test_into_iter() {
-        let vec = bitvec![true, false, true, false];
+        let vec = bitvec![true, true, false, false];
+        let unchanged = vec.clone();
+
         let mut iter = vec.into_iter();
         assert_eq!(iter.len(), 4);
         assert_eq!(iter.next(), Some(true));
-        assert_eq!(iter.next(), Some(false));
         assert_eq!(iter.next_back(), Some(false));
-        assert_eq!(iter.next_back(), Some(true));
-        assert_eq!(iter.next_back(), None);
+        assert_eq!(iter.next(), Some(true));
+        assert_eq!(iter.next_back(), Some(false));
         assert_eq!(iter.next(), None);
+        assert_eq!(iter.next_back(), None);
+
+        let mut vec = unchanged;
+        vec.push_unused_word();
+
+        let mut iter = vec.into_iter();
+        assert_eq!(iter.len(), 4);
+        assert_eq!(iter.next(), Some(true));
+        assert_eq!(iter.next_back(), Some(false));
+        assert_eq!(iter.next(), Some(true));
+        assert_eq!(iter.next_back(), Some(false));
+        assert_eq!(iter.next(), None);
+        assert_eq!(iter.next_back(), None);
     }
 }

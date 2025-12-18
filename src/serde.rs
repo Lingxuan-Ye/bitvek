@@ -1,37 +1,59 @@
-use crate::{BYTES_PER_WORD, BitVec};
+use crate::BitVec;
+use crate::primitive::{Byte, Word};
 use alloc::vec::Vec;
 use core::fmt;
 use serde::de::{Deserialize, Deserializer, Error, MapAccess, SeqAccess, Visitor};
-use serde::ser::{Serialize, SerializeStruct, Serializer};
+use serde::ser::{Serialize, SerializeSeq, SerializeStruct, Serializer};
 
-const FIELDS: &[&str] = &["len", "data"];
-const BYTES_INSUFFICIENT: &str = "bytes insufficient for given bit length";
+const FIELDS: &[&str] = &["len", "buf"];
 
 impl Serialize for BitVec {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        let bytes = Self::bytes_required(self.len);
-        let (div, rem) = (bytes / BYTES_PER_WORD, bytes % BYTES_PER_WORD);
-        let mut data = Vec::with_capacity(bytes);
-        for i in 0..div {
-            let word = unsafe { self.data.get_unchecked(i).to_be_bytes() };
-            data.extend(word);
-        }
-        let word = unsafe { self.data.get_unchecked(div).to_be_bytes() };
-        let slice = unsafe { word.get_unchecked(..rem) };
-        data.extend_from_slice(slice);
-
         let mut vec = serializer.serialize_struct("BitVec", 2)?;
         vec.serialize_field("len", &self.len)?;
-        vec.serialize_field("data", &data)?;
+        vec.serialize_field("buf", &BufProxy(self))?;
         vec.end()
     }
 }
 
+#[derive(Debug)]
+struct BufProxy<'a>(&'a BitVec);
+
+impl Serialize for BufProxy<'_> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let seq_len = self.0.len.div_ceil(Byte::BITS as usize);
+        let head_words = seq_len / Word::BYTES;
+        let tail_bytes = seq_len % Word::BYTES;
+        let mut seq = serializer.serialize_seq(Some(seq_len))?;
+
+        let head = unsafe { self.0.buf.get_unchecked(..head_words) };
+        for word in head {
+            let word = word.to_byte_array();
+            for byte in word {
+                seq.serialize_element(&byte)?;
+            }
+        }
+
+        if tail_bytes != 0 {
+            let word = unsafe { self.0.buf.get_unchecked(head_words) };
+            let word = word.to_byte_array();
+            let tail = unsafe { word.get_unchecked(0..tail_bytes) };
+            for byte in tail {
+                seq.serialize_element(&byte)?;
+            }
+        }
+
+        seq.end()
+    }
+}
+
 impl<'de> Deserialize<'de> for BitVec {
-    #[inline]
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
@@ -57,19 +79,14 @@ impl<'de> Visitor<'de> for BitVecVisitor {
         let len: usize = seq
             .next_element()?
             .ok_or_else(|| Error::invalid_length(0, &self))?;
-        let data: Vec<u8> = seq
+        let buf: Vec<Byte> = seq
             .next_element()?
             .ok_or_else(|| Error::invalid_length(1, &self))?;
 
-        let bytes = Self::Value::bytes_required(len);
-        if data.len() < bytes {
-            Err(A::Error::custom(BYTES_INSUFFICIENT))
-        } else {
-            let slice = unsafe { data.get_unchecked(..bytes) };
-            let mut vec = Self::Value::from_bytes(slice);
-            vec.len = len;
-            Ok(vec)
-        }
+        let mut vec = BitVec::from(buf);
+        vec.len = vec.len.min(len);
+
+        Ok(vec)
     }
 
     fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
@@ -77,7 +94,7 @@ impl<'de> Visitor<'de> for BitVecVisitor {
         A: MapAccess<'de>,
     {
         let mut len: Option<usize> = None;
-        let mut data: Option<Vec<u8>> = None;
+        let mut buf: Option<Vec<Byte>> = None;
 
         while let Some(key) = map.next_key()? {
             match key {
@@ -87,34 +104,29 @@ impl<'de> Visitor<'de> for BitVecVisitor {
                     }
                     len = Some(map.next_value()?);
                 }
-                Field::Data => {
-                    if data.is_some() {
-                        return Err(Error::duplicate_field("data"));
+                Field::Buf => {
+                    if buf.is_some() {
+                        return Err(Error::duplicate_field("buf"));
                     }
-                    data = Some(map.next_value()?);
+                    buf = Some(map.next_value()?);
                 }
             }
         }
 
         let len = len.ok_or_else(|| Error::missing_field("len"))?;
-        let data = data.ok_or_else(|| Error::missing_field("data"))?;
+        let buf = buf.ok_or_else(|| Error::missing_field("buf"))?;
 
-        let bytes = Self::Value::bytes_required(len);
-        if data.len() < bytes {
-            Err(A::Error::custom(BYTES_INSUFFICIENT))
-        } else {
-            let slice = unsafe { data.get_unchecked(..bytes) };
-            let mut vec = Self::Value::from_bytes(slice);
-            vec.len = len;
-            Ok(vec)
-        }
+        let mut vec = BitVec::from(buf);
+        vec.len = vec.len.min(len);
+
+        Ok(vec)
     }
 }
 
 #[derive(Debug)]
 enum Field {
     Len,
-    Data,
+    Buf,
 }
 
 impl<'de> Deserialize<'de> for Field {
@@ -133,7 +145,7 @@ impl Visitor<'_> for FieldVisitor {
     type Value = Field;
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str("`len` or `data`")
+        formatter.write_str("`len` or `buf`")
     }
 
     fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
@@ -141,23 +153,22 @@ impl Visitor<'_> for FieldVisitor {
         E: Error,
     {
         match value {
-            "len" => Ok(Self::Value::Len),
-            "data" => Ok(Self::Value::Data),
-            _ => Err(E::unknown_field(value, FIELDS)),
+            "len" => Ok(Field::Len),
+            "buf" => Ok(Field::Buf),
+            _ => Err(Error::unknown_field(value, FIELDS)),
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::bitvec;
-    use serde_test::{Token, assert_de_tokens, assert_de_tokens_error, assert_ser_tokens};
+    use serde_test::{Token, assert_de_tokens, assert_ser_tokens};
 
     #[test]
     fn test_serialize() {
         {
-            let vec = bitvec![true, false, true, false];
+            let vec = bitvec![true, true, false, false];
             let tokens = [
                 Token::Struct {
                     name: "BitVec",
@@ -165,27 +176,9 @@ mod tests {
                 },
                 Token::Str("len"),
                 Token::U64(4),
-                Token::Str("data"),
+                Token::Str("buf"),
                 Token::Seq { len: Some(1) },
-                Token::U8(0b10100000),
-                Token::SeqEnd,
-                Token::StructEnd,
-            ];
-            assert_ser_tokens(&vec, &tokens);
-        }
-
-        {
-            let vec = bitvec![true, false, true, false, true, false, true, false];
-            let tokens = [
-                Token::Struct {
-                    name: "BitVec",
-                    len: 2,
-                },
-                Token::Str("len"),
-                Token::U64(8),
-                Token::Str("data"),
-                Token::Seq { len: Some(1) },
-                Token::U8(0b10101010),
+                Token::U8(0b11000000),
                 Token::SeqEnd,
                 Token::StructEnd,
             ];
@@ -194,7 +187,7 @@ mod tests {
 
         {
             let vec = bitvec![
-                true, false, true, false, true, false, true, false, true, true
+                true, true, true, true, false, false, false, false, true, true
             ];
             let tokens = [
                 Token::Struct {
@@ -203,9 +196,9 @@ mod tests {
                 },
                 Token::Str("len"),
                 Token::U64(10),
-                Token::Str("data"),
+                Token::Str("buf"),
                 Token::Seq { len: Some(2) },
-                Token::U8(0b10101010),
+                Token::U8(0b11110000),
                 Token::U8(0b11000000),
                 Token::SeqEnd,
                 Token::StructEnd,
@@ -221,25 +214,11 @@ mod tests {
                 Token::Seq { len: None },
                 Token::U64(4),
                 Token::Seq { len: None },
-                Token::U8(0b10101010),
+                Token::U8(0b11001100),
                 Token::SeqEnd,
                 Token::SeqEnd,
             ];
-            let expected = bitvec![true, false, true, false];
-            assert_de_tokens(&expected, &tokens);
-        }
-
-        {
-            let tokens = [
-                Token::Seq { len: None },
-                Token::U64(4),
-                Token::Seq { len: None },
-                Token::U8(0b10101010),
-                Token::U8(0b11110000),
-                Token::SeqEnd,
-                Token::SeqEnd,
-            ];
-            let expected = bitvec![true, false, true, false];
+            let expected = bitvec![true, true, false, false];
             assert_de_tokens(&expected, &tokens);
         }
 
@@ -248,13 +227,13 @@ mod tests {
                 Token::Seq { len: None },
                 Token::U64(10),
                 Token::Seq { len: None },
-                Token::U8(0b10101010),
+                Token::U8(0b11110000),
                 Token::U8(0b11110000),
                 Token::SeqEnd,
                 Token::SeqEnd,
             ];
             let expected = bitvec![
-                true, false, true, false, true, false, true, false, true, true
+                true, true, true, true, false, false, false, false, true, true
             ];
             assert_de_tokens(&expected, &tokens);
         }
@@ -264,11 +243,12 @@ mod tests {
                 Token::Seq { len: None },
                 Token::U64(10),
                 Token::Seq { len: None },
-                Token::U8(0b10101010),
+                Token::U8(0b11110000),
                 Token::SeqEnd,
                 Token::SeqEnd,
             ];
-            assert_de_tokens_error::<BitVec>(&tokens, BYTES_INSUFFICIENT);
+            let expected = bitvec![true, true, true, true, false, false, false, false];
+            assert_de_tokens(&expected, &tokens);
         }
     }
 
@@ -279,29 +259,13 @@ mod tests {
                 Token::Map { len: None },
                 Token::Str("len"),
                 Token::U64(4),
-                Token::Str("data"),
+                Token::Str("buf"),
                 Token::Seq { len: None },
-                Token::U8(0b10101010),
+                Token::U8(0b11001100),
                 Token::SeqEnd,
                 Token::MapEnd,
             ];
-            let expected = bitvec![true, false, true, false];
-            assert_de_tokens(&expected, &tokens);
-        }
-
-        {
-            let tokens = [
-                Token::Map { len: None },
-                Token::Str("len"),
-                Token::U64(4),
-                Token::Str("data"),
-                Token::Seq { len: None },
-                Token::U8(0b10101010),
-                Token::U8(0b11110000),
-                Token::SeqEnd,
-                Token::MapEnd,
-            ];
-            let expected = bitvec![true, false, true, false];
+            let expected = bitvec![true, true, false, false];
             assert_de_tokens(&expected, &tokens);
         }
 
@@ -310,15 +274,15 @@ mod tests {
                 Token::Map { len: None },
                 Token::Str("len"),
                 Token::U64(10),
-                Token::Str("data"),
+                Token::Str("buf"),
                 Token::Seq { len: None },
-                Token::U8(0b10101010),
+                Token::U8(0b11110000),
                 Token::U8(0b11110000),
                 Token::SeqEnd,
                 Token::MapEnd,
             ];
             let expected = bitvec![
-                true, false, true, false, true, false, true, false, true, true
+                true, true, true, true, false, false, false, false, true, true
             ];
             assert_de_tokens(&expected, &tokens);
         }
@@ -328,13 +292,14 @@ mod tests {
                 Token::Map { len: None },
                 Token::Str("len"),
                 Token::U64(10),
-                Token::Str("data"),
+                Token::Str("buf"),
                 Token::Seq { len: None },
-                Token::U8(0b10101010),
+                Token::U8(0b11110000),
                 Token::SeqEnd,
                 Token::MapEnd,
             ];
-            assert_de_tokens_error::<BitVec>(&tokens, BYTES_INSUFFICIENT);
+            let expected = bitvec![true, true, true, true, false, false, false, false];
+            assert_de_tokens(&expected, &tokens);
         }
     }
 
@@ -348,32 +313,13 @@ mod tests {
                 },
                 Token::Str("len"),
                 Token::U64(4),
-                Token::Str("data"),
+                Token::Str("buf"),
                 Token::Seq { len: None },
-                Token::U8(0b10101010),
+                Token::U8(0b11001100),
                 Token::SeqEnd,
                 Token::StructEnd,
             ];
-            let expected = bitvec![true, false, true, false];
-            assert_de_tokens(&expected, &tokens);
-        }
-
-        {
-            let tokens = [
-                Token::Struct {
-                    name: "BitVec",
-                    len: 2,
-                },
-                Token::Str("len"),
-                Token::U64(4),
-                Token::Str("data"),
-                Token::Seq { len: None },
-                Token::U8(0b10101010),
-                Token::U8(0b11110000),
-                Token::SeqEnd,
-                Token::StructEnd,
-            ];
-            let expected = bitvec![true, false, true, false];
+            let expected = bitvec![true, true, false, false];
             assert_de_tokens(&expected, &tokens);
         }
 
@@ -385,15 +331,15 @@ mod tests {
                 },
                 Token::Str("len"),
                 Token::U64(10),
-                Token::Str("data"),
+                Token::Str("buf"),
                 Token::Seq { len: None },
-                Token::U8(0b10101010),
+                Token::U8(0b11110000),
                 Token::U8(0b11110000),
                 Token::SeqEnd,
                 Token::StructEnd,
             ];
             let expected = bitvec![
-                true, false, true, false, true, false, true, false, true, true
+                true, true, true, true, false, false, false, false, true, true
             ];
             assert_de_tokens(&expected, &tokens);
         }
@@ -406,13 +352,14 @@ mod tests {
                 },
                 Token::Str("len"),
                 Token::U64(10),
-                Token::Str("data"),
+                Token::Str("buf"),
                 Token::Seq { len: None },
-                Token::U8(0b10101010),
+                Token::U8(0b11110000),
                 Token::SeqEnd,
                 Token::StructEnd,
             ];
-            assert_de_tokens_error::<BitVec>(&tokens, BYTES_INSUFFICIENT);
+            let expected = bitvec![true, true, true, true, false, false, false, false];
+            assert_de_tokens(&expected, &tokens);
         }
     }
 }

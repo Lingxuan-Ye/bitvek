@@ -19,7 +19,7 @@ impl BitAnd<&BitVec> for BitVec {
     /// shorter input.
     #[inline]
     fn bitand(self, rhs: &BitVec) -> Self::Output {
-        self.bitwise_operation_consume_self(rhs, |(left, right)| left & right)
+        self.bitwise_operation_consume_self(rhs, |(left, right)| left & *right)
     }
 }
 
@@ -41,6 +41,6 @@ impl BitAnd for &BitVec {
     /// shorter input.
     #[inline]
     fn bitand(self, rhs: &BitVec) -> Self::Output {
-        self.bitwise_operation(rhs, |(left, right)| left & right)
+        self.bitwise_operation(rhs, |(left, right)| *left & *right)
     }
 }

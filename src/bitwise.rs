@@ -1,6 +1,5 @@
 use crate::BitVec;
-use core::cmp::min;
-use core::iter::zip;
+use crate::primitive::Word;
 
 mod and;
 mod not;
@@ -10,54 +9,80 @@ mod xor;
 impl BitVec {
     fn bitwise_operation<F>(&self, rhs: &Self, op: F) -> Self
     where
-        F: FnMut((&usize, &usize)) -> usize,
+        F: FnMut((&Word, &Word)) -> Word,
     {
-        let len = min(self.len, rhs.len);
-        let data = zip(&self.data, &rhs.data).map(op).collect();
-        Self { len, data }
+        let len = self.len.min(rhs.len);
+        let buf_len = len.div_ceil(Word::BITS);
+        let buf = self
+            .buf
+            .iter()
+            .zip(&rhs.buf)
+            .map(op)
+            .take(buf_len)
+            .collect();
+        Self { len, buf }
     }
 
     fn bitwise_operation_consume_self<F>(self, rhs: &Self, op: F) -> Self
     where
-        F: FnMut((usize, &usize)) -> usize,
+        F: FnMut((Word, &Word)) -> Word,
     {
-        let len = min(self.len, rhs.len);
-        let data = zip(self.data, &rhs.data).map(op).collect();
-        Self { len, data }
+        let len = self.len.min(rhs.len);
+        let buf_len = len.div_ceil(Word::BITS);
+        let buf = self
+            .buf
+            .into_iter()
+            .zip(&rhs.buf)
+            .map(op)
+            .take(buf_len)
+            .collect();
+        Self { len, buf }
     }
 
     fn bitwise_operation_consume_both<F>(self, rhs: Self, op: F) -> Self
     where
-        F: FnMut((usize, usize)) -> usize,
+        F: FnMut((Word, Word)) -> Word,
     {
-        let len = min(self.len, rhs.len);
-        let data = zip(self.data, rhs.data).map(op).collect();
-        Self { len, data }
+        let len = self.len.min(rhs.len);
+        let buf_len = len.div_ceil(Word::BITS);
+        let buf = self
+            .buf
+            .into_iter()
+            .zip(rhs.buf)
+            .map(op)
+            .take(buf_len)
+            .collect();
+        Self { len, buf }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{BITS_PER_WORD, bitvec};
+    use crate::bitvec;
+    use crate::primitive::Word;
 
-    const LONG: usize = BITS_PER_WORD * 2 - 2;
-    const SHORT: usize = BITS_PER_WORD - 1;
+    const LONG: usize = Word::BITS * 2 + 1;
+    const SHORT: usize = Word::BITS + 1;
 
     macro_rules! bitwise_assert {
         ($op:tt, ($input_1:expr, $input_2:expr) => $output:expr) => {
             let vec_1 = bitvec![$input_1; LONG];
             let vec_2 = bitvec![$input_2; SHORT];
             let expected = bitvec![$output; SHORT];
+            let unchanged = vec_2.clone();
 
             assert_eq!(vec_1.clone() $op vec_2.clone(), expected);
             assert_eq!(vec_1.clone() $op &vec_2, expected);
             assert_eq!(&vec_1 $op vec_2.clone(), expected);
             assert_eq!(&vec_1 $op &vec_2, expected);
 
-            assert_eq!(vec_2.clone() $op vec_1.clone(), expected);
-            assert_eq!(vec_2.clone() $op &vec_1, expected);
-            assert_eq!(&vec_2 $op vec_1.clone(), expected);
-            assert_eq!(&vec_2 $op &vec_1, expected);
+            let mut vec_2 = unchanged;
+            vec_2.push_unused_word();
+
+            assert_eq!(vec_1.clone() $op vec_2.clone(), expected);
+            assert_eq!(vec_1.clone() $op &vec_2, expected);
+            assert_eq!(&vec_1 $op vec_2.clone(), expected);
+            assert_eq!(&vec_1 $op &vec_2, expected);
         };
     }
 

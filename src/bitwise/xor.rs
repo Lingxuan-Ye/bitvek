@@ -19,7 +19,7 @@ impl BitXor<&BitVec> for BitVec {
     /// shorter input.
     #[inline]
     fn bitxor(self, rhs: &BitVec) -> Self::Output {
-        self.bitwise_operation_consume_self(rhs, |(left, right)| left ^ right)
+        self.bitwise_operation_consume_self(rhs, |(left, right)| left ^ *right)
     }
 }
 
@@ -41,6 +41,6 @@ impl BitXor for &BitVec {
     /// shorter input.
     #[inline]
     fn bitxor(self, rhs: &BitVec) -> Self::Output {
-        self.bitwise_operation(rhs, |(left, right)| left ^ right)
+        self.bitwise_operation(rhs, |(left, right)| *left ^ *right)
     }
 }
