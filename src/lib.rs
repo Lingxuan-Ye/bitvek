@@ -506,3 +506,599 @@ impl Loc {
         Self { period, offset }
     }
 }
+
+#[cfg(test)]
+impl BitVec {
+    fn push_unused_word(&mut self) {
+        self.buf.push(Word::CLEAR);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    extern crate std;
+
+    use super::*;
+    use core::iter::repeat_n;
+    use std::hash::DefaultHasher;
+
+    #[test]
+    fn test_capacity() {
+        let vec = BitVec::with_capacity(0);
+        assert_eq!(vec.capacity(), 0);
+
+        let vec = BitVec::with_capacity(10);
+        assert!(vec.capacity() >= Word::BITS);
+
+        let vec = BitVec::with_capacity(Word::BITS + 1);
+        assert!(vec.capacity() >= Word::BITS * 2);
+    }
+
+    #[test]
+    fn test_len() {
+        let vec = bitvec![];
+        assert_eq!(vec.len(), 0);
+
+        let vec = bitvec![true, true, false, false];
+        assert_eq!(vec.len(), 4);
+    }
+
+    #[test]
+    fn test_is_empty() {
+        let vec = bitvec![];
+        assert!(vec.is_empty());
+
+        let vec = bitvec![true, true, false, false];
+        assert!(!vec.is_empty());
+    }
+
+    #[test]
+    fn test_new() {
+        let vec = BitVec::new();
+        assert_eq!(vec.len, 0);
+        assert_eq!(vec.buf, Vec::new());
+    }
+
+    #[test]
+    fn test_with_capacity() {
+        let vec = BitVec::with_capacity(0);
+        assert_eq!(vec.len, 0);
+        assert_eq!(vec.capacity(), 0);
+        assert_eq!(vec.buf.capacity(), 0);
+
+        let vec = BitVec::with_capacity(10);
+        assert_eq!(vec.len, 0);
+        assert!(vec.capacity() >= Word::BITS);
+        assert!(vec.buf.capacity() >= 1);
+
+        let vec = BitVec::with_capacity(Word::BITS + 1);
+        assert_eq!(vec.len, 0);
+        assert!(vec.capacity() >= Word::BITS * 2);
+        assert!(vec.buf.capacity() >= 2);
+    }
+
+    #[test]
+    fn test_reserve() {
+        let mut vec = bitvec![true, true, false, false];
+
+        vec.reserve(6);
+        assert!(vec.capacity() >= Word::BITS);
+
+        vec.reserve(Word::BITS - vec.len);
+        assert!(vec.capacity() >= Word::BITS);
+
+        vec.reserve(Word::BITS);
+        assert!(vec.capacity() >= Word::BITS * 2);
+    }
+
+    #[test]
+    fn test_shrink_to_fit() {
+        let mut vec = bitvec![true, true, false, false];
+        let unchanged = vec.clone();
+
+        vec.reserve(Word::BITS);
+        assert!(vec.capacity() >= Word::BITS * 2);
+
+        vec.shrink_to_fit();
+        assert!(vec.capacity() >= Word::BITS);
+        assert_eq!(vec, unchanged);
+
+        assert_eq!(vec.buf.len(), 1);
+        vec.push_unused_word();
+        assert_eq!(vec.buf.len(), 2);
+
+        vec.reserve(Word::BITS);
+        assert!(vec.capacity() >= Word::BITS * 2);
+
+        vec.shrink_to_fit();
+        assert!(vec.capacity() >= Word::BITS);
+        assert_eq!(vec, unchanged);
+        assert_eq!(vec.buf.len(), 1);
+    }
+
+    #[test]
+    fn test_shrink_to() {
+        let mut vec = bitvec![true, true, false, false];
+        let unchanged = vec.clone();
+
+        vec.reserve(Word::BITS * 2);
+        assert!(vec.capacity() >= Word::BITS * 3);
+
+        let capacity_unchanged = vec.capacity();
+        vec.shrink_to(capacity_unchanged + 1);
+        assert_eq!(vec.capacity(), capacity_unchanged);
+        assert_eq!(vec, unchanged);
+
+        vec.shrink_to(Word::BITS * 2);
+        assert!(vec.capacity() >= Word::BITS * 2);
+        assert_eq!(vec, unchanged);
+
+        vec.shrink_to(0);
+        assert!(vec.capacity() >= Word::BITS);
+        assert_eq!(vec, unchanged);
+
+        assert_eq!(vec.buf.len(), 1);
+        vec.push_unused_word();
+        assert_eq!(vec.buf.len(), 2);
+
+        vec.reserve(Word::BITS * 2);
+        assert!(vec.capacity() >= Word::BITS * 3);
+
+        let capacity_unchanged = vec.capacity();
+        vec.shrink_to(capacity_unchanged + 1);
+        assert_eq!(vec.capacity(), capacity_unchanged);
+        assert_eq!(vec, unchanged);
+        assert_eq!(vec.buf.len(), 2);
+
+        vec.shrink_to(Word::BITS * 2);
+        assert!(vec.capacity() >= Word::BITS * 2);
+        assert_eq!(vec, unchanged);
+        assert_eq!(vec.buf.len(), 2);
+
+        vec.shrink_to(0);
+        assert!(vec.capacity() >= Word::BITS);
+        assert_eq!(vec, unchanged);
+        assert_eq!(vec.buf.len(), 1);
+    }
+
+    #[test]
+    fn test_get() {
+        {
+            let mut vec = bitvec![true, true, false, false];
+
+            assert_eq!(vec.get(0), Some(true));
+            assert_eq!(vec.get(1), Some(true));
+            assert_eq!(vec.get(2), Some(false));
+            assert_eq!(vec.get(3), Some(false));
+            assert_eq!(vec.get(4), None);
+
+            vec.push_unused_word();
+
+            assert_eq!(vec.get(0), Some(true));
+            assert_eq!(vec.get(1), Some(true));
+            assert_eq!(vec.get(2), Some(false));
+            assert_eq!(vec.get(3), Some(false));
+            assert_eq!(vec.get(4), None);
+        }
+
+        {
+            let mut vec = bitvec![true; Word::BITS];
+
+            assert_eq!(vec.get(Word::BITS - 1), Some(true));
+            assert_eq!(vec.get(Word::BITS), None);
+
+            vec.push_unused_word();
+
+            assert_eq!(vec.get(Word::BITS - 1), Some(true));
+            assert_eq!(vec.get(Word::BITS), None);
+        }
+
+        {
+            let mut vec = bitvec![true; Word::BITS + 1];
+
+            assert_eq!(vec.get(Word::BITS), Some(true));
+            assert_eq!(vec.get(Word::BITS + 1), None);
+
+            vec.push_unused_word();
+
+            assert_eq!(vec.get(Word::BITS), Some(true));
+            assert_eq!(vec.get(Word::BITS + 1), None);
+        }
+    }
+
+    #[test]
+    fn test_get_unchecked() {
+        let mut vec = bitvec![true, true, false, false];
+
+        unsafe {
+            assert!(vec.get_unchecked(0));
+            assert!(vec.get_unchecked(1));
+            assert!(!vec.get_unchecked(2));
+            assert!(!vec.get_unchecked(3));
+        }
+
+        vec.push_unused_word();
+
+        unsafe {
+            assert!(vec.get_unchecked(0));
+            assert!(vec.get_unchecked(1));
+            assert!(!vec.get_unchecked(2));
+            assert!(!vec.get_unchecked(3));
+        }
+    }
+
+    #[test]
+    fn test_set() {
+        {
+            let mut vec = bitvec![true, true, false, false];
+            let unchanged = vec.clone();
+
+            assert!(vec.set(0, true).is_some());
+            assert!(vec.set(1, false).is_some());
+            assert!(vec.set(2, true).is_some());
+            assert!(vec.set(3, false).is_some());
+            assert!(vec.set(4, true).is_none());
+            assert_eq!(vec, bitvec![true, false, true, false]);
+
+            let mut vec = unchanged;
+            vec.push_unused_word();
+
+            assert!(vec.set(0, true).is_some());
+            assert!(vec.set(1, false).is_some());
+            assert!(vec.set(2, true).is_some());
+            assert!(vec.set(3, false).is_some());
+            assert!(vec.set(4, true).is_none());
+            assert_eq!(vec, bitvec![true, false, true, false]);
+        }
+
+        {
+            let mut vec = bitvec![true; Word::BITS];
+            let unchanged = vec.clone();
+
+            assert!(vec.set(Word::BITS - 1, false).is_some());
+            assert_eq!(vec.get(Word::BITS - 1), Some(false));
+            assert!(vec.set(Word::BITS, false).is_none());
+
+            let mut vec = unchanged;
+            vec.push_unused_word();
+
+            assert!(vec.set(Word::BITS - 1, false).is_some());
+            assert_eq!(vec.get(Word::BITS - 1), Some(false));
+            assert!(vec.set(Word::BITS, false).is_none());
+        }
+
+        {
+            let mut vec = bitvec![true; Word::BITS + 1];
+            let unchanged = vec.clone();
+
+            assert!(vec.set(Word::BITS, false).is_some());
+            assert_eq!(vec.get(Word::BITS), Some(false));
+            assert!(vec.set(Word::BITS + 1, false).is_none());
+
+            let mut vec = unchanged;
+            vec.push_unused_word();
+
+            assert!(vec.set(Word::BITS, false).is_some());
+            assert_eq!(vec.get(Word::BITS), Some(false));
+            assert!(vec.set(Word::BITS + 1, false).is_none());
+        }
+    }
+
+    #[test]
+    fn test_set_unchecked() {
+        let mut vec = bitvec![true, true, false, false];
+        let unchanged = vec.clone();
+
+        unsafe {
+            vec.set_unchecked(2, true);
+            vec.set_unchecked(3, true);
+        }
+        assert_eq!(vec, bitvec![true; 4]);
+
+        let mut vec = unchanged;
+        vec.push_unused_word();
+
+        unsafe {
+            vec.set_unchecked(2, true);
+            vec.set_unchecked(3, true);
+        }
+        assert_eq!(vec, bitvec![true; 4]);
+    }
+
+    #[test]
+    fn test_push() {
+        {
+            let mut vec = bitvec![true, true, false, false];
+            let unchanged = vec.clone();
+
+            vec.push(true);
+            assert_eq!(vec, bitvec![true, true, false, false, true]);
+            vec.push(false);
+            assert_eq!(vec, bitvec![true, true, false, false, true, false]);
+
+            let mut vec = unchanged;
+            vec.push_unused_word();
+
+            vec.push(true);
+            assert_eq!(vec, bitvec![true, true, false, false, true]);
+            vec.push(false);
+            assert_eq!(vec, bitvec![true, true, false, false, true, false]);
+        }
+
+        {
+            let mut vec = bitvec![true; Word::BITS];
+            let unchanged = vec.clone();
+
+            assert_eq!(vec.buf.len(), 1);
+            vec.push(true);
+            assert_eq!(vec.len, Word::BITS + 1);
+            assert_eq!(vec.get(vec.len - 1), Some(true));
+            assert_eq!(vec.buf.len(), 2);
+            vec.push(false);
+            assert_eq!(vec.len, Word::BITS + 2);
+            assert_eq!(vec.get(vec.len - 1), Some(false));
+            assert_eq!(vec.buf.len(), 2);
+
+            let mut vec = unchanged;
+            vec.push_unused_word();
+
+            assert_eq!(vec.buf.len(), 2);
+            vec.push(true);
+            assert_eq!(vec.len, Word::BITS + 1);
+            assert_eq!(vec.get(vec.len - 1), Some(true));
+            assert_eq!(vec.buf.len(), 2);
+            vec.push(false);
+            assert_eq!(vec.len, Word::BITS + 2);
+            assert_eq!(vec.get(vec.len - 1), Some(false));
+            assert_eq!(vec.buf.len(), 2);
+        }
+    }
+
+    #[test]
+    fn test_pop() {
+        {
+            let mut vec = bitvec![true, true, false, false];
+            let unchanged = vec.clone();
+
+            assert_eq!(vec.pop(), Some(false));
+            assert_eq!(vec, bitvec![true, true, false]);
+            assert_eq!(vec.pop(), Some(false));
+            assert_eq!(vec, bitvec![true, true]);
+            assert_eq!(vec.pop(), Some(true));
+            assert_eq!(vec, bitvec![true]);
+            assert_eq!(vec.pop(), Some(true));
+            assert_eq!(vec, bitvec![]);
+            assert_eq!(vec.pop(), None);
+            assert_eq!(vec, bitvec![]);
+
+            let mut vec = unchanged;
+            vec.push_unused_word();
+
+            assert_eq!(vec.pop(), Some(false));
+            assert_eq!(vec, bitvec![true, true, false]);
+            assert_eq!(vec.pop(), Some(false));
+            assert_eq!(vec, bitvec![true, true]);
+            assert_eq!(vec.pop(), Some(true));
+            assert_eq!(vec, bitvec![true]);
+            assert_eq!(vec.pop(), Some(true));
+            assert_eq!(vec, bitvec![]);
+            assert_eq!(vec.pop(), None);
+            assert_eq!(vec, bitvec![]);
+        }
+
+        {
+            let mut vec = bitvec![true; Word::BITS + 1];
+            let unchanged = vec.clone();
+
+            assert_eq!(vec.buf.len(), 2);
+            while vec.pop().is_some() {}
+            assert_eq!(vec.len, 0);
+            assert_eq!(vec.buf.len(), 2);
+
+            let mut vec = unchanged;
+            vec.push_unused_word();
+
+            assert_eq!(vec.buf.len(), 3);
+            while vec.pop().is_some() {}
+            assert_eq!(vec.len, 0);
+            assert_eq!(vec.buf.len(), 3);
+        }
+    }
+
+    #[test]
+    fn test_index() {
+        let mut vec = bitvec![true, true, false, false];
+
+        assert!(vec[0]);
+        assert!(vec[1]);
+        assert!(!vec[2]);
+        assert!(!vec[3]);
+
+        vec.push_unused_word();
+
+        assert!(vec[0]);
+        assert!(vec[1]);
+        assert!(!vec[2]);
+        assert!(!vec[3]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_index_fails() {
+        let vec = bitvec![true, true, false, false];
+
+        let _ = vec[4];
+    }
+
+    #[test]
+    fn test_clone() {
+        let mut vec = bitvec![true, true, false, false];
+
+        let cloned = vec.clone();
+        assert_eq!(vec, cloned);
+
+        vec.push_unused_word();
+
+        let cloned = vec.clone();
+        assert_eq!(vec, cloned);
+        assert_eq!(vec.buf.len(), 2);
+        assert_eq!(cloned.buf.len(), 1);
+    }
+
+    #[test]
+    fn test_extend() {
+        let mut vec = bitvec![true, true, false, false];
+        let unchanged = vec.clone();
+
+        vec.extend([true; Word::BITS]);
+        assert_eq!(vec.len, Word::BITS + 4);
+        assert_eq!(vec.get(0), Some(true));
+        assert_eq!(vec.get(1), Some(true));
+        assert_eq!(vec.get(2), Some(false));
+        assert_eq!(vec.get(3), Some(false));
+        for index in 4..vec.len {
+            assert_eq!(vec.get(index), Some(true));
+        }
+
+        let mut vec = unchanged;
+        vec.push_unused_word();
+
+        vec.extend([true; Word::BITS]);
+        assert_eq!(vec.len, Word::BITS + 4);
+        assert_eq!(vec.get(0), Some(true));
+        assert_eq!(vec.get(1), Some(true));
+        assert_eq!(vec.get(2), Some(false));
+        assert_eq!(vec.get(3), Some(false));
+        for index in 4..vec.len {
+            assert_eq!(vec.get(index), Some(true));
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_extend_fail() {
+        let mut vec = bitvec![true, true, false, false];
+
+        vec.extend(repeat_n(true, usize::MAX));
+    }
+
+    #[test]
+    fn test_hash() {
+        fn hash(vec: &BitVec) -> u64 {
+            let mut hasher = DefaultHasher::new();
+            vec.hash(&mut hasher);
+            hasher.finish()
+        }
+
+        {
+            let lhs = bitvec![true, true, false, false];
+            let rhs = bitvec![true; 4];
+            let unchanged = rhs.clone();
+
+            let lhs_hash = hash(&lhs);
+            let rhs_hash = hash(&rhs);
+            assert_ne!(lhs_hash, rhs_hash);
+
+            let mut rhs = unchanged;
+            rhs.push_unused_word();
+
+            let lhs_hash = hash(&lhs);
+            let rhs_hash = hash(&rhs);
+            assert_ne!(lhs_hash, rhs_hash);
+        }
+
+        {
+            let lhs = bitvec![true, true, false, false];
+            let mut rhs = bitvec![true, true, false, false, true];
+            let unchanged = rhs.clone();
+
+            let lhs_hash = hash(&lhs);
+            let rhs_hash = hash(&rhs);
+            assert_ne!(lhs_hash, rhs_hash);
+            rhs.pop();
+            let rhs_hash = hash(&rhs);
+            assert_eq!(lhs_hash, rhs_hash);
+
+            let mut rhs = unchanged;
+            rhs.push_unused_word();
+
+            let lhs_hash = hash(&lhs);
+            let rhs_hash = hash(&rhs);
+            assert_ne!(lhs_hash, rhs_hash);
+            rhs.pop();
+            let rhs_hash = hash(&rhs);
+            assert_eq!(lhs_hash, rhs_hash);
+        }
+
+        {
+            let lhs = bitvec![true; Word::BITS + 1];
+            let mut rhs = lhs.clone();
+
+            let lhs_hash = hash(&lhs);
+            let rhs_hash = hash(&rhs);
+            assert_eq!(lhs_hash, rhs_hash);
+            rhs.push(true).pop();
+            let rhs_hash = hash(&rhs);
+            assert_eq!(lhs_hash, rhs_hash);
+
+            let mut rhs = lhs.clone();
+            rhs.push_unused_word();
+
+            let lhs_hash = hash(&lhs);
+            let rhs_hash = hash(&rhs);
+            assert_eq!(lhs_hash, rhs_hash);
+            rhs.push(true).pop();
+            let rhs_hash = hash(&rhs);
+            assert_eq!(lhs_hash, rhs_hash);
+        }
+    }
+
+    #[test]
+    fn test_eq() {
+        {
+            let lhs = bitvec![true, true, false, false];
+            let rhs = bitvec![true; 4];
+            let unchanged = rhs.clone();
+
+            assert_ne!(lhs, rhs);
+
+            let mut rhs = unchanged;
+            rhs.push_unused_word();
+
+            assert_ne!(lhs, rhs);
+        }
+
+        {
+            let lhs = bitvec![true, true, false, false];
+            let mut rhs = bitvec![true, true, false, false, true];
+            let unchanged = rhs.clone();
+
+            assert_ne!(lhs, rhs);
+            rhs.pop();
+            assert_eq!(lhs, rhs);
+
+            let mut rhs = unchanged;
+            rhs.push_unused_word();
+
+            assert_ne!(lhs, rhs);
+            rhs.pop();
+            assert_eq!(lhs, rhs);
+        }
+
+        {
+            let lhs = bitvec![true; Word::BITS + 1];
+            let mut rhs = lhs.clone();
+
+            assert_eq!(lhs, rhs);
+            rhs.push(true).pop();
+            assert_eq!(lhs, rhs);
+
+            let mut rhs = lhs.clone();
+            rhs.push_unused_word();
+
+            assert_eq!(lhs, rhs);
+            rhs.push(true).pop();
+            assert_eq!(lhs, rhs);
+        }
+    }
+}

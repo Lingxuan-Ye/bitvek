@@ -159,3 +159,207 @@ impl Visitor<'_> for FieldVisitor {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::bitvec;
+    use serde_test::{Token, assert_de_tokens, assert_ser_tokens};
+
+    #[test]
+    fn test_serialize() {
+        {
+            let vec = bitvec![true, true, false, false];
+            let tokens = [
+                Token::Struct {
+                    name: "BitVec",
+                    len: 2,
+                },
+                Token::Str("len"),
+                Token::U64(4),
+                Token::Str("buf"),
+                Token::Seq { len: Some(1) },
+                Token::U8(0b11000000),
+                Token::SeqEnd,
+                Token::StructEnd,
+            ];
+            assert_ser_tokens(&vec, &tokens);
+        }
+
+        {
+            let vec = bitvec![
+                true, true, true, true, false, false, false, false, true, true
+            ];
+            let tokens = [
+                Token::Struct {
+                    name: "BitVec",
+                    len: 2,
+                },
+                Token::Str("len"),
+                Token::U64(10),
+                Token::Str("buf"),
+                Token::Seq { len: Some(2) },
+                Token::U8(0b11110000),
+                Token::U8(0b11000000),
+                Token::SeqEnd,
+                Token::StructEnd,
+            ];
+            assert_ser_tokens(&vec, &tokens);
+        }
+    }
+
+    #[test]
+    fn test_deserialize_seq() {
+        {
+            let tokens = [
+                Token::Seq { len: None },
+                Token::U64(4),
+                Token::Seq { len: None },
+                Token::U8(0b11001100),
+                Token::SeqEnd,
+                Token::SeqEnd,
+            ];
+            let expected = bitvec![true, true, false, false];
+            assert_de_tokens(&expected, &tokens);
+        }
+
+        {
+            let tokens = [
+                Token::Seq { len: None },
+                Token::U64(10),
+                Token::Seq { len: None },
+                Token::U8(0b11110000),
+                Token::U8(0b11110000),
+                Token::SeqEnd,
+                Token::SeqEnd,
+            ];
+            let expected = bitvec![
+                true, true, true, true, false, false, false, false, true, true
+            ];
+            assert_de_tokens(&expected, &tokens);
+        }
+
+        {
+            let tokens = [
+                Token::Seq { len: None },
+                Token::U64(10),
+                Token::Seq { len: None },
+                Token::U8(0b11110000),
+                Token::SeqEnd,
+                Token::SeqEnd,
+            ];
+            let expected = bitvec![true, true, true, true, false, false, false, false];
+            assert_de_tokens(&expected, &tokens);
+        }
+    }
+
+    #[test]
+    fn test_deserialize_map() {
+        {
+            let tokens = [
+                Token::Map { len: None },
+                Token::Str("len"),
+                Token::U64(4),
+                Token::Str("buf"),
+                Token::Seq { len: None },
+                Token::U8(0b11001100),
+                Token::SeqEnd,
+                Token::MapEnd,
+            ];
+            let expected = bitvec![true, true, false, false];
+            assert_de_tokens(&expected, &tokens);
+        }
+
+        {
+            let tokens = [
+                Token::Map { len: None },
+                Token::Str("len"),
+                Token::U64(10),
+                Token::Str("buf"),
+                Token::Seq { len: None },
+                Token::U8(0b11110000),
+                Token::U8(0b11110000),
+                Token::SeqEnd,
+                Token::MapEnd,
+            ];
+            let expected = bitvec![
+                true, true, true, true, false, false, false, false, true, true
+            ];
+            assert_de_tokens(&expected, &tokens);
+        }
+
+        {
+            let tokens = [
+                Token::Map { len: None },
+                Token::Str("len"),
+                Token::U64(10),
+                Token::Str("buf"),
+                Token::Seq { len: None },
+                Token::U8(0b11110000),
+                Token::SeqEnd,
+                Token::MapEnd,
+            ];
+            let expected = bitvec![true, true, true, true, false, false, false, false];
+            assert_de_tokens(&expected, &tokens);
+        }
+    }
+
+    #[test]
+    fn test_deserialize_struct() {
+        {
+            let tokens = [
+                Token::Struct {
+                    name: "BitVec",
+                    len: 2,
+                },
+                Token::Str("len"),
+                Token::U64(4),
+                Token::Str("buf"),
+                Token::Seq { len: None },
+                Token::U8(0b11001100),
+                Token::SeqEnd,
+                Token::StructEnd,
+            ];
+            let expected = bitvec![true, true, false, false];
+            assert_de_tokens(&expected, &tokens);
+        }
+
+        {
+            let tokens = [
+                Token::Struct {
+                    name: "BitVec",
+                    len: 2,
+                },
+                Token::Str("len"),
+                Token::U64(10),
+                Token::Str("buf"),
+                Token::Seq { len: None },
+                Token::U8(0b11110000),
+                Token::U8(0b11110000),
+                Token::SeqEnd,
+                Token::StructEnd,
+            ];
+            let expected = bitvec![
+                true, true, true, true, false, false, false, false, true, true
+            ];
+            assert_de_tokens(&expected, &tokens);
+        }
+
+        {
+            let tokens = [
+                Token::Struct {
+                    name: "BitVec",
+                    len: 2,
+                },
+                Token::Str("len"),
+                Token::U64(10),
+                Token::Str("buf"),
+                Token::Seq { len: None },
+                Token::U8(0b11110000),
+                Token::SeqEnd,
+                Token::StructEnd,
+            ];
+            let expected = bitvec![true, true, true, true, false, false, false, false];
+            assert_de_tokens(&expected, &tokens);
+        }
+    }
+}
