@@ -51,6 +51,7 @@ impl<'a> IntoIterator for &'a BitVec {
     }
 }
 
+/// An owning iterator over the bits of a [`BitVec`].
 #[derive(Clone, Debug)]
 pub struct IntoIter {
     vec: BitVec,
@@ -83,6 +84,7 @@ impl DoubleEndedIterator for IntoIter {
 impl ExactSizeIterator for IntoIter {}
 impl FusedIterator for IntoIter {}
 
+/// An iterator over the bits of a [`BitVec`].
 #[derive(Clone, Debug)]
 pub struct Iter<'a> {
     vec: &'a BitVec,
