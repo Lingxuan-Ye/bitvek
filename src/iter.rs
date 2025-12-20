@@ -41,6 +41,16 @@ impl IntoIterator for BitVec {
     }
 }
 
+impl<'a> IntoIterator for &'a BitVec {
+    type Item = Bit;
+    type IntoIter = Iter<'a>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct IntoIter {
     vec: BitVec,
