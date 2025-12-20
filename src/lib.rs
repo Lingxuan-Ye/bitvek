@@ -30,6 +30,7 @@
 
 extern crate alloc;
 
+pub use self::iter::{IntoIter, Iter};
 pub use self::primitive::{Bit, Byte};
 
 use self::primitive::Word;
