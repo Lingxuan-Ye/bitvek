@@ -1,6 +1,6 @@
 //! Say, we have a bit vector —
 //!
-//! it's nothing better than a `Vec<bool>`, but …
+//! it's nothing better than a [`Vec<bool>`], but …
 //!
 //! what if we implement it,
 //!
