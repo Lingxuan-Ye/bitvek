@@ -38,38 +38,31 @@ impl From<&[Byte]> for BitVec {
     }
 }
 
-impl<const N: usize> From<&[Byte; N]> for BitVec {
-    #[inline]
-    fn from(value: &[Byte; N]) -> Self {
-        Self::from(&value[..])
-    }
-}
-
 impl<const N: usize> From<[Byte; N]> for BitVec {
     #[inline]
     fn from(value: [Byte; N]) -> Self {
-        Self::from(&value)
+        Self::from(&value[..])
     }
 }
 
 impl From<Box<[Byte]>> for BitVec {
     #[inline]
     fn from(value: Box<[Byte]>) -> Self {
-        Self::from(&*value)
+        Self::from(&value[..])
     }
 }
 
 impl<const N: usize> From<Box<[Byte; N]>> for BitVec {
     #[inline]
     fn from(value: Box<[Byte; N]>) -> Self {
-        Self::from(&*value)
+        Self::from(&value[..])
     }
 }
 
 impl From<Vec<Byte>> for BitVec {
     #[inline]
     fn from(value: Vec<Byte>) -> Self {
-        Self::from(&*value)
+        Self::from(&value[..])
     }
 }
 
@@ -77,13 +70,6 @@ impl From<&[Bit]> for BitVec {
     #[inline]
     fn from(value: &[Bit]) -> Self {
         value.iter().copied().collect()
-    }
-}
-
-impl<const N: usize> From<&[Bit; N]> for BitVec {
-    #[inline]
-    fn from(value: &[Bit; N]) -> Self {
-        Self::from(&value[..])
     }
 }
 
