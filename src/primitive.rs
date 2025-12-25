@@ -4,7 +4,7 @@ use core::ptr;
 pub type Bit = bool;
 pub type Byte = u8;
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub(crate) struct Word(usize);
 
 impl Word {
