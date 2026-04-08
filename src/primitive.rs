@@ -48,8 +48,8 @@ impl Word {
     /// # Notes
     ///
     /// Overflows if `index >= Word::BITS`.
-    pub(crate) fn get(&self, index: usize) -> Bit {
-        *self & Self::mask(index) != Self(0)
+    pub(crate) fn get(self, index: usize) -> Bit {
+        self & Self::mask(index) != Self(0)
     }
 
     /// # Notes
@@ -81,7 +81,7 @@ impl BitAnd for Word {
 
 impl BitAndAssign for Word {
     fn bitand_assign(&mut self, rhs: Self) {
-        self.0 &= rhs.0
+        self.0 &= rhs.0;
     }
 }
 
@@ -95,7 +95,7 @@ impl BitOr for Word {
 
 impl BitOrAssign for Word {
     fn bitor_assign(&mut self, rhs: Self) {
-        self.0 |= rhs.0
+        self.0 |= rhs.0;
     }
 }
 
@@ -109,7 +109,7 @@ impl BitXor for Word {
 
 impl BitXorAssign for Word {
     fn bitxor_assign(&mut self, rhs: Self) {
-        self.0 ^= rhs.0
+        self.0 ^= rhs.0;
     }
 }
 

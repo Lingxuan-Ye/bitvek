@@ -163,6 +163,10 @@ impl BitVec {
     /// greater than or equal to `self.len() + additional`. Does nothing if capacity
     /// is already sufficient.
     ///
+    /// # Panics
+    ///
+    /// Panics if the required capacity exceeds `usize::MAX` bits.
+    ///
     /// # Examples
     ///
     /// ```
@@ -359,9 +363,7 @@ impl BitVec {
     /// assert_eq!(vec, bitvec![true, true, false, false, true]);
     /// ```
     pub fn push(&mut self, value: Bit) -> &mut Self {
-        if self.len == usize::MAX {
-            panic!("capacity overflow")
-        }
+        assert!(self.len != usize::MAX, "capacity overflow");
         let loc = Loc::new(self.len);
         if loc.period < self.buf.len() {
             let word = unsafe { self.buf.get_unchecked_mut(loc.period) };

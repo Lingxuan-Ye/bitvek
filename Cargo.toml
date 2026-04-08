@@ -1,8 +1,8 @@
 [package]
 name = "bitvek"
-version = "0.4.3"
+version = "0.4.4"
 edition = "2024"
-authors = ["Lingxuan Ye <love@lingxuan.io>"]
+authors = ["Lingxuan Ye <ink@lingxuan.io>"]
 categories = ["data-structures", "no-std"]
 repository = "https://github.com/Lingxuan-Ye/bitvek"
 readme = "README.md"
